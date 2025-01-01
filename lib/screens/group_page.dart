@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'group_details_page.dart';
+import 'create_group_page.dart';
 
 class GroupPage extends StatefulWidget {
   const GroupPage({super.key});
@@ -17,6 +18,7 @@ class _GroupPageState extends State<GroupPage> {
   String? _error;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  final _descriptionController = TextEditingController();
 
   @override
   void initState() {
@@ -99,6 +101,16 @@ class _GroupPageState extends State<GroupPage> {
     }).toList();
   }
 
+  Future<void> _refreshAfterGroupCreation() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await _loadGroups(); // Refresh only the managed groups
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredGroups = _getFilteredGroups();
@@ -106,6 +118,24 @@ class _GroupPageState extends State<GroupPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fitness Groups'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateGroupPage(),
+                ),
+              );
+
+              // If group was created successfully, refresh the groups list
+              if (result == true) {
+                await _loadGroups();
+              }
+            },
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadGroups,
@@ -274,6 +304,7 @@ class _GroupPageState extends State<GroupPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 }

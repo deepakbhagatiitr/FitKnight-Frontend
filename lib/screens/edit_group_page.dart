@@ -1,21 +1,14 @@
 import 'package:flutter/material.dart';
-
 import 'package:http/http.dart' as http;
-
 import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EditGroupPage extends StatefulWidget {
   final int groupId;
-
   final String currentName;
-
   final String currentDescription;
-
   final String currentActivityType;
-
-  final Map<String, String> currentSchedule;
+  final String currentSchedule;
 
   const EditGroupPage({
     Key? key,
@@ -32,40 +25,21 @@ class EditGroupPage extends StatefulWidget {
 
 class _EditGroupPageState extends State<EditGroupPage> {
   final _formKey = GlobalKey<FormState>();
-
   late TextEditingController _nameController;
-
   late TextEditingController _descriptionController;
-
   late TextEditingController _activityTypeController;
-
+  late TextEditingController _scheduleController;
   bool _isLoading = false;
-
-  Map<String, String> _schedule = {};
-
-  final List<String> _weekDays = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday'
-  ];
 
   @override
   void initState() {
     super.initState();
-
     _nameController = TextEditingController(text: widget.currentName);
-
     _descriptionController =
         TextEditingController(text: widget.currentDescription);
-
     _activityTypeController =
         TextEditingController(text: widget.currentActivityType);
-
-    _schedule = Map.from(widget.currentSchedule);
+    _scheduleController = TextEditingController(text: widget.currentSchedule);
   }
 
   Future<void> _updateGroup() async {
@@ -75,18 +49,13 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-
       final token = prefs.getString('token');
 
-      // Remove empty schedule entries
-
-      _schedule.removeWhere((key, value) => value.isEmpty);
-
-      final Map<String, dynamic> requestBody = {
+      final Map<String, String> requestBody = {
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
         'activity_type': _activityTypeController.text.trim(),
-        'schedule': _schedule,
+        'schedule': _scheduleController.text.trim(),
       };
 
       print('Request Body: ${jsonEncode(requestBody)}');
@@ -101,28 +70,23 @@ class _EditGroupPageState extends State<EditGroupPage> {
       );
 
       print('Response Status: ${response.statusCode}');
-
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         if (!mounted) return;
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Group updated successfully!'),
             backgroundColor: Colors.green,
           ),
         );
-
         Navigator.pop(context, true);
       } else {
         throw Exception('Failed to update group: ${response.body}');
       }
     } catch (e) {
       print('Error updating group: $e');
-
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error updating group: $e'),
@@ -134,13 +98,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  Future<TimeOfDay?> _selectTime(BuildContext context) async {
-    return showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
   }
 
   @override
@@ -195,7 +152,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a group name';
                           }
-
                           return null;
                         },
                       ),
@@ -211,7 +167,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
                           if (value == null || value.isEmpty) {
                             return 'Please enter an activity type';
                           }
-
                           return null;
                         },
                       ),
@@ -234,49 +189,20 @@ class _EditGroupPageState extends State<EditGroupPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _weekDays.length,
-                        itemBuilder: (context, index) {
-                          final day = _weekDays[index];
-
-                          return ListTile(
-                            title: Text(day.capitalize()),
-                            subtitle: Text(_schedule[day] ?? 'Not set'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.access_time),
-                                  onPressed: () async {
-                                    final startTime =
-                                        await _selectTime(context);
-
-                                    if (startTime != null) {
-                                      final endTime =
-                                          await _selectTime(context);
-
-                                      if (endTime != null) {
-                                        setState(() {
-                                          _schedule[day] =
-                                              '${startTime.format(context)}-${endTime.format(context)}';
-                                        });
-                                      }
-                                    }
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    setState(() {
-                                      _schedule.remove(day);
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
+                      TextFormField(
+                        controller: _scheduleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Schedule',
+                          hintText:
+                              'e.g., Monday, Wednesday, Friday 6:00 AM - 7:00 AM',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.schedule),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a schedule';
+                          }
+                          return null;
                         },
                       ),
                     ],
@@ -310,7 +236,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a description';
                           }
-
                           return null;
                         },
                       ),
@@ -328,19 +253,9 @@ class _EditGroupPageState extends State<EditGroupPage> {
   @override
   void dispose() {
     _nameController.dispose();
-
     _descriptionController.dispose();
-
     _activityTypeController.dispose();
-
+    _scheduleController.dispose();
     super.dispose();
-  }
-}
-
-// Add this extension for string capitalization
-
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

@@ -9,11 +9,11 @@ class OrganizerChat extends StatefulWidget {
   final String organizerName;
 
   const OrganizerChat({
-    super.key,
+    Key? key,
     required this.groupId,
     required this.groupName,
     required this.organizerName,
-  });
+  }) : super(key: key);
 
   @override
   State<OrganizerChat> createState() => _OrganizerChatState();

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'group_details_page.dart';
 import 'profile_page.dart';
 import 'login_page.dart';
+import 'create_group_page.dart';
 
 class GroupOrganizerDashboard extends StatefulWidget {
   const GroupOrganizerDashboard({super.key});
@@ -261,6 +262,22 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
               icon: const Icon(Icons.logout),
               onPressed: _handleLogout,
             ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateGroupPage(),
+                  ),
+                );
+
+                // If group was created successfully, refresh the groups list
+                if (result == true) {
+                  await _loadManagedGroups();
+                }
+              },
+            ),
           ],
         ),
         body: RefreshIndicator(
@@ -310,7 +327,6 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
                                                 GroupDetailsPage(
                                               group: group,
                                               groupId: group['id'].toString(),
-                                              isOrganizer: true,
                                             ),
                                           ),
                                         );
@@ -380,36 +396,13 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
                                 Text('Available: ${member['availability']}'),
                               ],
                             ),
-                            trailing: TextButton(
-                              onPressed: () {
-                                // TODO: Implement invite functionality
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Invited ${member['username']} to join'),
-                                  ),
-                                );
-                              },
-                              child: const Text('Invite'),
-                            ),
                             isThreeLine: true,
                           ),
                         )),
                   ],
                 ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // TODO: Implement create group
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Create group functionality coming soon!'),
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-          tooltip: 'Create Group',
-        ),
+        floatingActionButton: null,
       ),
     );
   }

@@ -95,6 +95,7 @@ class _DashboardPageState extends State<DashboardPage> {
             'image': imageUrl,
             'email': profile['email'] ?? '',
             'location': profile['location'] ?? '',
+            'phone': profile['phone_number'] ?? '',
           };
         }).toList();
 
@@ -141,7 +142,7 @@ class _DashboardPageState extends State<DashboardPage> {
             }
 
             return {
-              'id': group['id'],
+              'id': group['id']?.toString() ?? '',
               'name': group['name'] ?? group['group_name'] ?? '',
               'activity': group['activity_type'] ?? '',
               'members': group['member_count'] ?? group['members'] ?? 0,
@@ -277,35 +278,64 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundImage: NetworkImage(buddy['image']),
+              backgroundImage: NetworkImage(buddy['image'] ?? ''),
               onBackgroundImageError: (e, s) {
                 print('Error loading buddy image: $e');
               },
             ),
             const SizedBox(height: 8),
             Text(
-              buddy['name'],
+              buddy['name'] ?? 'No Name',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
               overflow: TextOverflow.ellipsis,
             ),
-            if (buddy['activity'].isNotEmpty)
+            // Check if activity exists and is not empty
+            if (buddy['activity'] != null &&
+                buddy['activity'].toString().isNotEmpty)
               Text(
                 buddy['activity'],
                 overflow: TextOverflow.ellipsis,
               ),
-            if (buddy['availability'].isNotEmpty)
+            // Check if availability exists and is not empty
+            if (buddy['availability'] != null &&
+                buddy['availability'].toString().isNotEmpty)
               Text(
                 buddy['availability'],
                 overflow: TextOverflow.ellipsis,
               ),
-            if (buddy['location'].isNotEmpty)
-              Text(
-                buddy['location'],
-                style: Theme.of(context).textTheme.bodySmall,
-                overflow: TextOverflow.ellipsis,
+            // Check if phone exists and is not empty
+            if (buddy['phone'] != null && buddy['phone'].toString().isNotEmpty)
+              Row(
+                children: [
+                  const Icon(Icons.phone, size: 16),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      buddy['phone'],
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            // Check if location exists and is not empty
+            if (buddy['location'] != null &&
+                buddy['location'].toString().isNotEmpty)
+              Row(
+                children: [
+                  const Icon(Icons.location_on, size: 16),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      buddy['location'],
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -391,7 +421,7 @@ class _DashboardPageState extends State<DashboardPage> {
             MaterialPageRoute(
               builder: (context) => GroupDetailsPage(
                 group: group,
-                groupId: group['id'].toString(),
+                groupId: group['id']?.toString() ?? '',
               ),
             ),
           );

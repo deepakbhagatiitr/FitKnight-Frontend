@@ -31,26 +31,82 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
   TabController? _tabController;
   List<Map<String, dynamic>> _joinRequests = [];
   String? _joinRequestStatus;
+  bool _isOrganizerOrMember = false;
+  String? _currentUsername;
+  List<Tab> _tabs = [];
+  List<Widget> _tabViews = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: widget.isOrganizer ? 4 : 3,
-      vsync: this,
-    );
+    _getCurrentUsername();
     _loadGroupDetails();
-    if (widget.isOrganizer) {
-      _loadJoinRequests();
-    } else {
-      _checkJoinRequestStatus();
-    }
   }
 
-  @override
-  void dispose() {
-    _tabController?.dispose();
-    super.dispose();
+  void _setupTabs() {
+    final isOrganizer = _groupDetails?['organizer_name'] == _currentUsername;
+
+    // Initialize tabs
+    _tabs = [
+      const Tab(text: 'Details'),
+      const Tab(text: 'Members'),
+    ];
+
+    // Initialize tab views
+    _tabViews = [
+      _buildDetailsTab(_groupDetails ?? widget.group),
+      _buildMembersTab(),
+    ];
+
+    // Add Requests tab if user is organizer
+    if (isOrganizer) {
+      _tabs.add(const Tab(text: 'Requests'));
+      _tabViews.add(_buildRequestsTab());
+      // Load requests immediately if user is organizer
+      _loadJoinRequests().then((_) {
+        // Update the requests tab view after loading
+        if (mounted) {
+          setState(() {
+            // Update the requests tab view with the latest data
+            _tabViews[2] = _buildRequestsTab();
+          });
+        }
+      });
+    }
+
+    // Add Chat tab if user is organizer or member
+    if (_isOrganizerOrMember) {
+      _tabs.add(const Tab(text: 'Chat'));
+      _tabViews.add(_buildChatTab());
+    }
+
+    // Initialize TabController after tabs are set up
+    _tabController?.dispose(); // Dispose old controller if it exists
+    _tabController = TabController(
+      length: _tabs.length,
+      vsync: this,
+    );
+
+    // Add listener for tab changes
+    _tabController!.addListener(() {
+      // Check if this is the Requests tab and it's selected
+      if (_tabController!.index == 2 && isOrganizer) {
+        print('\n=== Requests Tab Selected ===');
+        _loadJoinRequests().then((_) {
+          // Update the requests tab view after loading
+          if (mounted) {
+            setState(() {
+              // Update the requests tab view with the latest data
+              _tabViews[2] = _buildRequestsTab();
+            });
+          }
+        });
+      }
+    });
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadGroupDetails() async {
@@ -63,11 +119,14 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       final username = prefs.getString('username');
+      _currentUsername = username; // Set current username immediately
 
       print('\n=== Loading Group Details ===');
-      print('Group ID: ${widget.groupId}');
-      print('Current Username: $username');
-      print('Group Data: ${widget.group}');
+      print('Current Username from SharedPrefs: $username');
+
+      if (token == null || username == null) {
+        throw Exception('Authentication required');
+      }
 
       final response = await http.get(
         Uri.parse('http://192.168.31.36:8000/api/groups/${widget.groupId}/'),
@@ -77,12 +136,43 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
         },
       );
 
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final organizerUsername = data['organizer_name'] ?? '';
+        final isOrganizer = username == organizerUsername;
+
+        // Process members list first
+        final membersList =
+            (data['members'] as List<dynamic>? ?? []).map((member) {
+          String imageUrl = member['profile_image'] ?? '';
+          if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+            imageUrl = 'http://192.168.31.36:8000$imageUrl';
+          }
+          return {
+            'id': member['id'],
+            'username': member['username'] ?? '',
+            'profile_image': imageUrl,
+            'role': member['username'] == organizerUsername
+                ? 'Organizer'
+                : 'Member',
+          };
+        }).toList();
+
+        // Check if current user is a member
+        final isMember =
+            membersList.any((member) => member['username'] == username);
+
+        print('\n=== Access Check ===');
+        print('Username: $username');
+        print('Organizer: $organizerUsername');
+        print('Is Organizer: $isOrganizer');
+        print('Is Member: $isMember');
+        print('Members: ${membersList.map((m) => m['username']).toList()}');
+
         setState(() {
+          _members = membersList;
+          _isOrganizerOrMember =
+              isOrganizer || isMember; // Set based on both conditions
           _groupDetails = {
             'id': data['id'],
             'name': data['name'] ?? '',
@@ -91,30 +181,24 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
             'schedule': data['schedule'] ?? '',
             'description': data['description'] ?? '',
             'created_at': data['created_at'] ?? '',
-            'updated_at': data['updated_at'] ?? '',
-            'organizer_name': data['organizer_name'] ?? '',
-            'member_count': data['member_count'] ?? 0,
-            'is_organizer': data['is_organizer'] ?? false,
-            'current_username': username,
+            'organizer_name': organizerUsername,
+            'is_organizer': isOrganizer,
           };
-
-          // Update members list from the same response
-          _members = (data['members'] as List<dynamic>? ?? []).map((member) {
-            String imageUrl = member['profile_image'] ?? '';
-            if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-              imageUrl = 'http://192.168.31.36:8000$imageUrl';
-            }
-
-            return {
-              'id': member['id'],
-              'username': member['username'] ?? '',
-              'profile_image': imageUrl,
-              'role': 'Member',
-            };
-          }).toList();
-
           _isLoading = false;
         });
+
+        // Set up tabs after data is loaded and roles are determined
+        _setupTabs();
+
+        // Load join requests if user is organizer
+        if (isOrganizer) {
+          await _loadJoinRequests();
+        }
+
+        // Check join request status if user is neither organizer nor member
+        if (!isOrganizer && !isMember) {
+          await _checkJoinRequestStatus();
+        }
       } else {
         throw Exception('Failed to load group details: ${response.statusCode}');
       }
@@ -132,22 +216,38 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
+      print('\n=== Checking Join Request Status ===');
+      print('Group ID: ${widget.groupId}');
+
       final response = await http.get(
-        Uri.parse(
-            'http://192.168.31.36:8000/api/groups/${widget.groupId}/join-status/'),
+        Uri.parse('http://192.168.31.36:8000/api/groups/join-requests/'),
         headers: {
           'Authorization': 'Token $token',
         },
       );
 
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final List<dynamic> requests = jsonDecode(response.body);
+
+        final request = requests.firstWhere(
+          (req) => req['group']['id'].toString() == widget.groupId,
+          orElse: () => {'status': null},
+        );
+
         setState(() {
-          _joinRequestStatus = data['status'];
+          _joinRequestStatus = request['status'];
         });
+
+        print('Join Request Status: $_joinRequestStatus');
       }
     } catch (e) {
-      print('Error checking join status: $e');
+      print('Error checking join request status: $e');
+      setState(() {
+        _joinRequestStatus = null;
+      });
     }
   }
 
@@ -182,46 +282,77 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
   }
 
   Future<void> _loadJoinRequests() async {
-    if (!widget.isOrganizer) return;
+    if (!mounted) return;
 
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
       print('\n=== Loading Join Requests ===');
+      print('Group ID: ${widget.groupId}');
+      final url =
+          'http://192.168.31.36:8000/api/groups/${widget.groupId}/request-join/';
+      print('API URL: $url');
+
       final response = await http.get(
-        Uri.parse(
-            'http://192.168.31.36:8000/api/groups/${widget.groupId}/request-join/'),
+        Uri.parse(url),
         headers: {
           'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
         },
       );
 
+      print('\n=== Join Requests API Response ===');
       print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+      print('Raw Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _joinRequests = data.map((request) {
-            String imageUrl = request['user']['profile_image'] ?? '';
-            if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-              imageUrl = 'http://192.168.31.36:8000$imageUrl';
-            }
 
-            return {
-              'id': request['id'],
-              'user_id': request['user']['id'],
-              'username': request['user']['username'] ?? '',
-              'profile_image': imageUrl,
-              'status': request['status'] ?? 'pending',
-              'created_at': request['created_at'] ?? '',
-            };
-          }).toList();
-        });
+        if (mounted) {
+          setState(() {
+            _joinRequests = data.map((request) {
+              String imageUrl = request['user']['profile_image'] ?? '';
+              if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+                imageUrl = 'http://192.168.31.36:8000$imageUrl';
+              }
+
+              return {
+                'id': request['id'],
+                'user_id': request['user']['id'],
+                'username': request['user']['username'],
+                'profile_image': imageUrl,
+                'status':
+                    request['status']?.toString().toLowerCase() ?? 'pending',
+                'created_at': request['created_at'],
+              };
+            }).toList();
+            _isLoading = false;
+          });
+
+          // Force update the requests tab view
+          final requestsTabIndex =
+              _tabs.indexWhere((tab) => tab.text == 'Requests');
+          if (requestsTabIndex != -1) {
+            setState(() {
+              _tabViews[requestsTabIndex] = _buildRequestsTab();
+            });
+          }
+        }
       }
     } catch (e) {
-      print('Error loading join requests: $e');
+      print('\n=== Error in Loading Join Requests ===');
+      print('Error Details: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = e.toString();
+        });
+      }
     }
   }
 
@@ -230,21 +361,26 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      // Get the username from the request data
+      // Find the request in our list
       final request = _joinRequests.firstWhere(
         (req) => req['id'].toString() == requestId,
         orElse: () => throw Exception('Request not found'),
       );
-      final username = request['username'];
 
       print('\n=== Handling Join Request ===');
-      print('Group ID: ${widget.groupId}');
-      print('Username: $username');
+      print('Request ID: $requestId');
+      print('Request Data: $request');
       print('Action: $action');
+      print('Group ID: ${widget.groupId}');
+      print('Username: ${request['username']}');
+
+      // Construct the URL with the correct format
+      final url =
+          'http://192.168.31.36:8000/api/groups/${widget.groupId}/requests/${request['username']}/';
+      print('API URL: $url');
 
       final response = await http.post(
-        Uri.parse(
-            'http://192.168.31.36:8000/api/groups/${widget.groupId}/requests/$username/'),
+        Uri.parse(url),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -252,18 +388,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
         body: jsonEncode({'action': action}),
       );
 
-      print('Status Code: ${response.statusCode}');
+      print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Update the local state
-        setState(() {
-          final index = _joinRequests
-              .indexWhere((req) => req['id'].toString() == requestId);
-          if (index != -1) {
-            _joinRequests[index]['status'] = action;
-          }
-        });
+        print('Request handled successfully');
 
         // Show success message
         if (!mounted) return;
@@ -276,14 +405,20 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
           ),
         );
 
-        // Refresh the requests and group details (which includes members)
-        _loadJoinRequests();
-        _loadGroupDetails(); // This will update both group details and members list
+        // Refresh data
+        print('Refreshing data after successful action');
+        await _loadJoinRequests(); // Reload requests
+        await _loadGroupDetails(); // Reload group details to update members list
       } else {
-        throw Exception('Failed to ${action} request: ${response.statusCode}');
+        print('Failed to handle request');
+        throw Exception(
+            'Failed to ${action} request: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error handling join request: $e');
+      print('\n=== Error in Handle Join Request ===');
+      print('Error Details: $e');
+      print('Stack Trace: ${StackTrace.current}');
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -300,7 +435,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Group Header
           Card(
             elevation: 2,
             child: Padding(
@@ -353,8 +487,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
             ),
           ),
           const SizedBox(height: 16),
-
-          // Schedule & Location Card
           Card(
             elevation: 2,
             child: Padding(
@@ -397,8 +529,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
             ),
           ),
           const SizedBox(height: 16),
-
-          // Description Card
           if (groupData['description']?.isNotEmpty ?? false)
             Card(
               elevation: 2,
@@ -424,11 +554,8 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
                 ),
               ),
             ),
-
           const SizedBox(height: 16),
-
-          // Contact Organizer Card
-          if (!widget.isOrganizer) // Only show for non-organizers
+          if (!widget.isOrganizer)
             Card(
               elevation: 2,
               child: Padding(
@@ -583,11 +710,27 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
   }
 
   Widget _buildChatTab() {
-    // Only show chat if user is a member or organizer
-    final isMember = _members.any(
-        (member) => member['username'] == _groupDetails?['current_username']);
+    if (_currentUsername == null) {
+      return const Center(
+        child: Text('Authentication required'),
+      );
+    }
 
-    if (!isMember && !widget.isOrganizer) {
+    // Check if user is organizer
+    final isOrganizer = _groupDetails?['organizer_name'] == _currentUsername;
+
+    // Check if user is member
+    final isMember =
+        _members.any((member) => member['username'] == _currentUsername);
+
+    print('\n=== Chat Access Check ===');
+    print('Current Username: $_currentUsername');
+    print('Organizer Name: ${_groupDetails?['organizer_name']}');
+    print('Is Organizer: $isOrganizer');
+    print('Is Member: $isMember');
+    print('Members: ${_members.map((m) => m['username']).toList()}');
+
+    if (!isOrganizer && !isMember) {
       return const Center(
         child: Text('Join the group to participate in chat'),
       );
@@ -596,175 +739,234 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
     return GroupChat(
       groupId: widget.groupId,
       groupName: _groupDetails?['name'] ?? '',
-      isOrganizer: widget.isOrganizer,
+      isOrganizer: isOrganizer,
     );
   }
 
   Widget _buildRequestsTab() {
-    if (_joinRequests.isEmpty) {
-      return const Center(
-        child: Text('No pending join requests'),
-      );
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return ListView.builder(
-      itemCount: _joinRequests.length,
-      itemBuilder: (context, index) {
-        final request = _joinRequests[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage:
-                          request['profile_image']?.isNotEmpty ?? false
-                              ? NetworkImage(request['profile_image'])
-                              : null,
-                      child: request['profile_image']?.isEmpty ?? true
-                          ? const Icon(Icons.person, size: 30)
-                          : null,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            request['username'] ?? 'Unknown User',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Requested: ${_formatDate(request['created_at'])}',
-                            style: TextStyle(
-                              color:
-                                  Theme.of(context).textTheme.bodySmall?.color,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Status: ${request['status']?.toUpperCase() ?? 'PENDING'}',
-                            style: TextStyle(
-                              color: _getStatusColor(request['status']),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+    print('\n=== Building Requests Tab ===');
+    print('Total Requests: ${_joinRequests.length}');
+
+    // Filter only pending requests
+    final pendingRequests = _joinRequests.where((request) {
+      final status = request['status']?.toString().toLowerCase() ?? '';
+      print(
+          'Checking request - Username: ${request['username']}, Status: $status');
+      return status == 'pending';
+    }).toList();
+
+    print('Found ${pendingRequests.length} pending requests');
+    for (var request in pendingRequests) {
+      print('Pending request from: ${request['username']}');
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadJoinRequests,
+      child: pendingRequests.isEmpty
+          ? ListView(
+              // Wrap empty message in ListView for RefreshIndicator
+              children: const [
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'No pending join requests',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (request['status'] == 'pending') ...[
-                      TextButton(
-                        onPressed: () => _handleJoinRequest(
-                            request['id'].toString(), 'reject'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Reject'),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton(
-                        onPressed: () => _handleJoinRequest(
-                            request['id'].toString(), 'approve'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Approve'),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ],
+            )
+          : ListView.builder(
+              itemCount: pendingRequests.length, // Changed this line
+              padding: const EdgeInsets.all(16),
+              itemBuilder: (context, index) {
+                final request = pendingRequests[index];
+                print(
+                    'Building request item for: ${request['username']} with status: ${request['status']}');
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundImage:
+                                  request['profile_image']?.isNotEmpty ?? false
+                                      ? NetworkImage(request['profile_image'])
+                                      : null,
+                              child: request['profile_image']?.isEmpty ?? true
+                                  ? const Icon(Icons.person)
+                                  : null,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    request['username'] ?? 'Unknown User',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Requested: ${_formatDate(request['created_at'])}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'PENDING',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => _handleJoinRequest(
+                                request['id'].toString(),
+                                'reject',
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                              child: const Text('Reject'),
+                            ),
+                            const SizedBox(width: 16),
+                            ElevatedButton(
+                              onPressed: () => _handleJoinRequest(
+                                request['id'].toString(),
+                                'approve',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Approve'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-        );
-      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final groupData = _groupDetails ?? widget.group;
-    final isMember = _members.any(
-        (member) => member['username'] == _groupDetails?['current_username']);
-
-    if (_tabController == null) {
+    if (_isLoading || _tabController == null || _tabs.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    if (_error != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $_error'),
+              ElevatedButton(
+                onPressed: _loadGroupDetails,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final groupData = _groupDetails ?? widget.group;
+    final isOrganizer = groupData['organizer_name'] == _currentUsername;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(groupData['name'] ?? ''),
         actions: [
-          if (groupData['is_organizer'] == true)
+          if (isOrganizer)
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
+                // Convert schedule to string safely
+                String scheduleStr = '';
+                if (groupData['schedule'] != null) {
+                  scheduleStr = groupData['schedule'].toString();
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditGroupPage(group: groupData),
+                    builder: (context) => EditGroupPage(
+                      groupId: int.parse(widget.groupId),
+                      currentName: groupData['name'] ?? '',
+                      currentDescription: groupData['description'] ?? '',
+                      currentActivityType: groupData['activity_type'] ?? '',
+                      currentSchedule: scheduleStr,  // Pass as string
+                    ),
                   ),
-                );
+                ).then((edited) {
+                  if (edited == true) {
+                    _loadGroupDetails();
+                  }
+                });
               },
             ),
         ],
         bottom: TabBar(
-          controller: _tabController!,
-          tabs: [
-            const Tab(text: 'Details'),
-            const Tab(text: 'Members'),
-            if (widget.isOrganizer) const Tab(text: 'Requests'),
-            const Tab(text: 'Chat'),
-          ],
+          controller: _tabController,
+          tabs: _tabs,
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: $_error'),
-                      ElevatedButton(
-                        onPressed: _loadGroupDetails,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : TabBarView(
-                  controller: _tabController!,
-                  children: [
-                    _buildDetailsTab(groupData),
-                    _buildMembersTab(),
-                    if (widget.isOrganizer) _buildRequestsTab(),
-                    _buildChatTab(),
-                  ],
-                ),
-      floatingActionButton: (!isMember && !widget.isOrganizer)
+      body: TabBarView(
+        controller: _tabController,
+        children: _tabViews,
+      ),
+      floatingActionButton: (!isOrganizer && !_isOrganizerOrMember)
           ? FloatingActionButton.extended(
               onPressed: _joinRequestStatus == null ? _sendJoinRequest : null,
               label: Text(_getJoinButtonText()),
               icon: const Icon(Icons.group_add),
+              backgroundColor: _getButtonColor(),
             )
           : null,
     );
@@ -861,6 +1063,44 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
     } catch (e) {
       print('Error checking member status: $e');
       return false;
+    }
+  }
+
+  Color _getButtonColor() {
+    switch (_joinRequestStatus) {
+      case 'pending':
+        return Colors.orange;
+      case 'rejected':
+        return Colors.red;
+      case null:
+        return Theme.of(context).colorScheme.primary;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _getCurrentUsername() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final username = prefs.getString('username');
+
+      print('\n=== Getting Current Username ===');
+      print('Username from SharedPreferences: $username');
+
+      setState(() {
+        _currentUsername = username;
+      });
+    } catch (e) {
+      print('Error getting username: $e');
+      setState(() {
+        _error = 'Failed to get username';
+      });
     }
   }
 }

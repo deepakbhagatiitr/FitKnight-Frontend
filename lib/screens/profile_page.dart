@@ -4,6 +4,7 @@ import '../models/profile.dart';
 import 'edit_profile_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../utils/string_extensions.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -30,11 +31,6 @@ class _ProfilePageState extends State<ProfilePage> {
       final token = prefs.getString('token');
       final userId = prefs.getInt('userId');
 
-      print('\n=== Loading User Profile ===');
-      print('User Type: $userType');
-      print('User ID: $userId');
-      print('Token: $token');
-
       if (userId == null) {
         throw Exception('User ID not found');
       }
@@ -47,46 +43,53 @@ class _ProfilePageState extends State<ProfilePage> {
         },
       );
 
-      print('\n=== Profile Response ===');
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
+        final userData = jsonDecode(response.body);
+        print('API Response: $userData');
 
-        // Convert API response to Profile model with proper type checking
+        // Convert contact info values to strings explicitly
+        final Map<String, String> contactInfo = {
+          'email': (userData['email'] ?? '').toString(),
+          'phone': (userData['phone_number'] ?? '').toString(),
+          'location': (userData['user_location'] ?? '').toString(),
+        };
+
+        // Get privacy settings from SharedPreferences
+        final Map<String, bool> privacySettings = {
+          'showEmail': prefs.getBool('showEmail') ?? true,
+          'showPhone': prefs.getBool('showPhone') ?? true,
+          'showLocation': prefs.getBool('showLocation') ?? true,
+        };
+
+        print('Contact Info: $contactInfo');
+        print('Privacy Settings: $privacySettings');
+
         final profile = Profile(
           userId: userId.toString(),
-          name: jsonData['username'] ?? '',
-          bio: jsonData['bio'] ?? '',
-          imageUrl: jsonData['profile_image']?.toString() ?? '',
-          fitnessGoals: jsonData['fitness_goals'] != null
-              ? (jsonData['fitness_goals'] is List
-                  ? List<String>.from(jsonData['fitness_goals'])
-                  : [jsonData['fitness_goals'].toString()])
+          name: userData['username'] ?? '',
+          bio: userData['fitness_goals'] ?? '',
+          imageUrl: userData['profile_image']?.toString() ?? '',
+          workoutPreferences: userData['workout_preferences'] != null
+              ? (() {
+                  try {
+                    if (userData['workout_preferences'] is List) {
+                      return List<String>.from(
+                          (userData['workout_preferences'] as List)
+                              .map((e) => e.toString().capitalize()));
+                    }
+                  } catch (e) {
+                    print('Error parsing workout preferences: $e');
+                  }
+                  return <String>[];
+                })()
               : [],
-          contactInfo: {
-            'email': jsonData['email'] ?? '',
-            'phone': jsonData['phone'] ?? '',
-            'location': jsonData['location'] ?? '',
-          },
-          fitnessHistory: jsonData['fitness_history'] != null &&
-                  jsonData['fitness_history'] is List
-              ? List<Map<String, dynamic>>.from(jsonData['fitness_history'])
-              : [],
-          groupGoals:
-              jsonData['group_goals'] != null && jsonData['group_goals'] is List
-                  ? List<Map<String, dynamic>>.from(jsonData['group_goals'])
-                  : [],
-          groupActivities: jsonData['group_activities'] != null &&
-                  jsonData['group_activities'] is List
-              ? List<Map<String, dynamic>>.from(jsonData['group_activities'])
-              : [],
+          contactInfo: contactInfo,
+          privacySettings: privacySettings,
+          fitnessHistory: [],
+          groupGoals: [],
+          groupActivities: [],
+          role: userData['role'] ?? '',
         );
-
-        print('\n=== Profile Image URL ===');
-        print('Raw URL from API: ${jsonData['profile_image']}');
-        print('Processed URL: ${profile.imageUrl}');
 
         setState(() {
           _userType = userType;
@@ -98,12 +101,14 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       print('Error loading user profile: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading profile: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading profile: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       setState(() {
         _isLoading = false;
       });
@@ -146,6 +151,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               );
               if (result != null) {
+                // Update SharedPreferences with new privacy settings
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(
+                    'showEmail', result.privacySettings['showEmail'] ?? true);
+                await prefs.setBool(
+                    'showPhone', result.privacySettings['showPhone'] ?? true);
+                await prefs.setBool('showLocation',
+                    result.privacySettings['showLocation'] ?? true);
+
                 setState(() {
                   _profile = result;
                 });
@@ -181,9 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _profile!.bio.isNotEmpty
-                              ? _profile!.bio
-                              : 'No bio available',
+                          _profile!.bio.isNotEmpty ? _profile!.bio : '',
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ],
@@ -206,31 +218,47 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
-                    if (_profile!.contactInfo['email']?.isNotEmpty ?? false)
+                    if (_profile!.contactInfo['email']?.isNotEmpty == true &&
+                        _profile!.privacySettings['showEmail'] == true)
                       ListTile(
                         leading: const Icon(Icons.email),
                         title: const Text('Email'),
                         subtitle: Text(_profile!.contactInfo['email']!),
                       ),
-                    if (_profile!.contactInfo['phone']?.isNotEmpty ?? false)
+                    if (_profile!.contactInfo['phone']?.isNotEmpty == true &&
+                        _profile!.privacySettings['showPhone'] == true)
                       ListTile(
                         leading: const Icon(Icons.phone),
                         title: const Text('Phone'),
                         subtitle: Text(_profile!.contactInfo['phone']!),
                       ),
-                    if (_profile!.contactInfo['location']?.isNotEmpty ?? false)
+                    if (_profile!.contactInfo['location']?.isNotEmpty == true &&
+                        _profile!.privacySettings['showLocation'] == true)
                       ListTile(
                         leading: const Icon(Icons.location_on),
                         title: const Text('Location'),
                         subtitle: Text(_profile!.contactInfo['location']!),
+                      ),
+                    if (!(_profile!.contactInfo['email']?.isNotEmpty == true &&
+                            _profile!.privacySettings['showEmail'] == true) &&
+                        !(_profile!.contactInfo['phone']?.isNotEmpty == true &&
+                            _profile!.privacySettings['showPhone'] == true) &&
+                        !(_profile!.contactInfo['location']?.isNotEmpty ==
+                                true &&
+                            _profile!.privacySettings['showLocation'] == true))
+                      const Center(
+                        child: Text(
+                          'No contact information available',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
                       ),
                   ],
                 ),
               ),
             ),
 
-            // Fitness Goals (Show only for workout buddy)
-            if (_userType == 'buddy' && _profile!.fitnessGoals.isNotEmpty)
+            // Workout Preferences (Show only for workout buddy)
+            if (_userType == 'buddy' && _profile!.workoutPreferences.isNotEmpty)
               Card(
                 margin: const EdgeInsets.all(16),
                 child: Padding(
@@ -239,15 +267,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Fitness Goals',
+                        'Workout Preferences',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _profile!.fitnessGoals
-                            .map((goal) => Chip(label: Text(goal)))
+                        children: _profile!.workoutPreferences
+                            .map((pref) => Chip(
+                                  label: Text(pref),
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  labelStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer),
+                                ))
                             .toList(),
                       ),
                     ],
@@ -255,8 +292,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
 
-            // Fitness History (Show only for workout buddy)
-            if (_userType == 'buddy' && _profile!.fitnessHistory.isNotEmpty)
+            // Fitness History
+            if (_userType == 'buddy')
               Card(
                 margin: const EdgeInsets.all(16),
                 child: Padding(
@@ -269,20 +306,72 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
-                      ListView.builder(
+                      ListView(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _profile!.fitnessHistory.length,
-                        itemBuilder: (context, index) {
-                          final history = _profile!.fitnessHistory[index];
-                          return ListTile(
-                            title: Text(history['activity'] ?? ''),
-                            subtitle: Text(
-                              '${history['date']} • ${history['duration']}\n${history['milestone']}',
-                            ),
-                            isThreeLine: true,
-                          );
-                        },
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.fitness_center),
+                            title: const Text('Weight Training Started'),
+                            subtitle: const Text(
+                                'Started with basic strength training'),
+                            trailing: const Text('Jan 2023'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.directions_run),
+                            title: const Text('Running Milestone'),
+                            subtitle: const Text('Completed first 5K run'),
+                            trailing: const Text('Mar 2023'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.sports_gymnastics),
+                            title: const Text('Flexibility Achievement'),
+                            subtitle: const Text('Mastered basic yoga poses'),
+                            trailing: const Text('Jun 2023'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Fitness Milestones
+            if (_userType == 'buddy')
+              Card(
+                margin: const EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Fitness Milestones',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildMilestoneCard(
+                            context,
+                            icon: Icons.emoji_events,
+                            title: '10+',
+                            subtitle: 'Workouts\nCompleted',
+                          ),
+                          _buildMilestoneCard(
+                            context,
+                            icon: Icons.access_time,
+                            title: '20+',
+                            subtitle: 'Hours\nTrained',
+                          ),
+                          _buildMilestoneCard(
+                            context,
+                            icon: Icons.trending_up,
+                            title: '5',
+                            subtitle: 'Goals\nAchieved',
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -391,6 +480,44 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMilestoneCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ),

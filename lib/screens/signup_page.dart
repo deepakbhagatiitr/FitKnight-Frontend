@@ -38,6 +38,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _activityTypeController = TextEditingController();
   final _locationController = TextEditingController();
   final _scheduleController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   final _phoneController = TextEditingController();
 
@@ -78,6 +79,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _activityTypeController.dispose();
     _locationController.dispose();
     _scheduleController.dispose();
+    _descriptionController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -104,52 +106,42 @@ class _SignUpPageState extends State<SignUpPage> {
         print('\n=== Signup Request ===');
         print('URL: http://192.168.31.36:8000/api/register/');
 
-        // Prepare the request body
-        final Map<String, dynamic> body = {
-          'username': _usernameController.text,
-          'email': _emailController.text,
-          'password': _passwordController.text,
-          'password_confirm': _confirmPasswordController.text,
-          'role': _selectedRole == UserRole.workoutBuddy
-              ? 'workout_buddy'
-              : 'group_organizer',
-        };
-
-        // Add role-specific fields
-        if (_selectedRole == UserRole.workoutBuddy) {
-          body.addAll({
-            'fitness_goals': _fitnessGoalsController.text,
-            'workout_preferences': _workoutPreferences,
-            'availability': _availabilityController.text,
-          });
-        } else {
-          body.addAll({
-            'group_name': _groupNameController.text,
-            'activity_type': _activityTypeController.text,
-            'location': _locationController.text,
-            'schedule': _scheduleController.text,
-          });
-        }
-
-        print('Request Body:');
-        body.forEach((key, value) {
-          print('  $key: $value');
-        });
-
         // Create multipart request
         final request = http.MultipartRequest(
           'POST',
           Uri.parse('http://192.168.31.36:8000/api/register/'),
         );
 
-        // Add fields to request
-        request.fields.addAll(body.map((key, value) => MapEntry(
-            key, value is List ? jsonEncode(value) : value.toString())));
-
-        print('\n=== Multipart Request Fields ===');
-        request.fields.forEach((key, value) {
-          print('  $key: $value');
+        // Add common fields
+        request.fields.addAll({
+          'username': _usernameController.text,
+          'email': _emailController.text,
+          'password': _passwordController.text,
+          'password_confirm': _confirmPasswordController.text,
+          'phone_number':
+              _phoneController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+          'user_location': _locationController.text,
+          'role': _selectedRole == UserRole.workoutBuddy
+              ? 'workout_buddy'
+              : 'group_organizer',
         });
+
+        // Add role-specific fields
+        if (_selectedRole == UserRole.workoutBuddy) {
+          request.fields.addAll({
+            'fitness_goals': _fitnessGoalsController.text,
+            'workout_preferences': jsonEncode(
+                _workoutPreferences.map((e) => e.toLowerCase()).toList()),
+            'availability': _availabilityController.text,
+          });
+        } else {
+          request.fields.addAll({
+            'group_name': _groupNameController.text,
+            'activity_type': _activityTypeController.text,
+            'schedule': _scheduleController.text,
+            'description': _descriptionController.text,
+          });
+        }
 
         // Add profile image if selected
         if (_profileImage != null) {
@@ -159,25 +151,22 @@ class _SignUpPageState extends State<SignUpPage> {
               _profileImage!.path,
             ),
           );
-          print('\n=== Profile Image ===');
-          print('Path: ${_profileImage!.path}');
         }
 
-        print('\n=== Sending Request ===');
+        print('Request Fields:');
+        request.fields.forEach((key, value) {
+          print('  $key: $value');
+        });
+
         final response = await request.send();
-        print('Response Status Code: ${response.statusCode}');
-
         final responseData = await response.stream.bytesToString();
-        print('\n=== Response Data ===');
-        print(responseData);
 
-        final jsonResponse = jsonDecode(responseData);
-        print('\n=== Decoded Response ===');
-        print(jsonResponse);
+        print('\n=== Response ===');
+        print('Status Code: ${response.statusCode}');
+        print('Response Body: $responseData');
 
         if (response.statusCode == 201) {
           if (mounted) {
-            // Show success message and navigate to login
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Sign up successful! Please login.'),
@@ -190,20 +179,12 @@ class _SignUpPageState extends State<SignUpPage> {
             );
           }
         } else {
-          if (mounted) {
-            // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(jsonResponse['message'] ?? 'Registration failed'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+          final errorData = jsonDecode(responseData);
+          throw Exception(errorData['message'] ?? 'Registration failed');
         }
       } catch (e) {
-        print('Error: $e'); // Debug print for error
+        print('Error: $e');
         if (mounted) {
-          // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
@@ -318,11 +299,17 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: const InputDecoration(
                       labelText: 'Phone Number',
                       prefixIcon: Icon(Icons.phone),
+                      hintText: 'Enter 10-digit phone number',
                     ),
                     keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your phone number';
+                      }
+                      final phoneNumber =
+                          value.replaceAll(RegExp(r'[^0-9]'), '');
+                      if (phoneNumber.length != 10) {
+                        return 'Phone number must be exactly 10 digits';
                       }
                       return null;
                     },
@@ -557,19 +544,6 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
-                      controller: _locationController,
-                      decoration: InputDecoration(
-                        labelText: 'Location',
-                        hintText: 'Enter group location',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter location' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
                       controller: _scheduleController,
                       decoration: InputDecoration(
                         labelText: 'Schedule',
@@ -580,6 +554,20 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       validator: (value) =>
                           value!.isEmpty ? 'Please enter schedule' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                        hintText: 'Enter group description',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? 'Please enter a description' : null,
                     ),
                   ],
                   const SizedBox(height: 24),
