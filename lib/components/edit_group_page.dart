@@ -15,7 +15,7 @@ class EditGroupPage extends StatefulWidget {
 
   final String currentActivityType;
 
-  final Map<String, String> currentSchedule;
+  final String currentSchedule;
 
   const EditGroupPage({
     Key? key,
@@ -39,19 +39,9 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   late TextEditingController _activityTypeController;
 
+  late TextEditingController _scheduleController;
+
   bool _isLoading = false;
-
-  Map<String, String> _schedule = {};
-
-  final List<String> _weekDays = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday'
-  ];
 
   @override
   void initState() {
@@ -65,7 +55,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
     _activityTypeController =
         TextEditingController(text: widget.currentActivityType);
 
-    _schedule = Map.from(widget.currentSchedule);
+    _scheduleController = TextEditingController(text: widget.currentSchedule);
   }
 
   Future<void> _updateGroup() async {
@@ -78,21 +68,17 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
       final token = prefs.getString('token');
 
-      // Remove empty schedule entries
-
-      _schedule.removeWhere((key, value) => value.isEmpty);
-
       final Map<String, dynamic> requestBody = {
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
         'activity_type': _activityTypeController.text.trim(),
-        'schedule': _schedule,
+        'schedule': _scheduleController.text.trim(),
       };
 
       print('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.put(
-        Uri.parse('http://192.168.31.36:8000/api/groups/${widget.groupId}/'),
+        Uri.parse('http://10.81.1.137:8000/api/groups/${widget.groupId}/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -195,7 +181,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a group name';
                           }
-
                           return null;
                         },
                       ),
@@ -234,49 +219,21 @@ class _EditGroupPageState extends State<EditGroupPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _weekDays.length,
-                        itemBuilder: (context, index) {
-                          final day = _weekDays[index];
-
-                          return ListTile(
-                            title: Text(day.capitalize()),
-                            subtitle: Text(_schedule[day] ?? 'Not set'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.access_time),
-                                  onPressed: () async {
-                                    final startTime =
-                                        await _selectTime(context);
-
-                                    if (startTime != null) {
-                                      final endTime =
-                                          await _selectTime(context);
-
-                                      if (endTime != null) {
-                                        setState(() {
-                                          _schedule[day] =
-                                              '${startTime.format(context)}-${endTime.format(context)}';
-                                        });
-                                      }
-                                    }
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    setState(() {
-                                      _schedule.remove(day);
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
+                      TextFormField(
+                        controller: _scheduleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Schedule',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.schedule),
+                          hintText:
+                              'e.g., Monday, Wednesday, Friday 6:00 AM - 7:00 AM',
+                        ),
+                        maxLines: 2,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a schedule';
+                          }
+                          return null;
                         },
                       ),
                     ],
@@ -333,14 +290,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
     _activityTypeController.dispose();
 
+    _scheduleController.dispose();
+
     super.dispose();
-  }
-}
-
-// Add this extension for string capitalization
-
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

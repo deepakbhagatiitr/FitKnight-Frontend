@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'screens/login_page.dart';
+import 'package:fitknight/services/notification_service.dart';
+import 'package:provider/provider.dart';
+import 'providers/notification_provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        // ... other providers
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -21,3 +34,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+

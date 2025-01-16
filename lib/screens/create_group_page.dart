@@ -47,7 +47,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       print('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
-        Uri.parse('http://192.168.31.36:8000/api/groups/'),
+        Uri.parse('http://10.81.1.137:8000/api/groups/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Location & Schedule',
+                              'Schedule',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
