@@ -14,20 +14,28 @@ class JoinRequestsList extends StatelessWidget {
     required this.onRequestHandled,
   });
 
-  Future<void> _handleJoinRequest(BuildContext context, JoinRequest request, String action) async {
+  Future<void> _handleJoinRequest(
+      BuildContext context, JoinRequest request, String action) async {
     try {
       final groupService = GroupService();
       await groupService.handleJoinRequest(groupId, request.username, action);
-      
+
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(action == 'approve' ? 'Member approved successfully' : 'Request rejected successfully'),
+          content: Text(action == 'approve'
+              ? 'Member approved successfully'
+              : 'Request rejected successfully'),
           backgroundColor: action == 'approve' ? Colors.green : Colors.red,
         ),
       );
 
+      // Wait for a moment to ensure the notification is processed
+      await Future.delayed(const Duration(milliseconds: 500));
       onRequestHandled();
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
@@ -85,18 +93,21 @@ class JoinRequestsList extends StatelessWidget {
                         children: [
                           Text(
                             request.username,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Requested: ${_formatDate(request.createdAt)}',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 14),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(12),
@@ -117,13 +128,15 @@ class JoinRequestsList extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () => _handleJoinRequest(context, request, 'reject'),
+                      onPressed: () =>
+                          _handleJoinRequest(context, request, 'reject'),
                       style: TextButton.styleFrom(foregroundColor: Colors.red),
                       child: const Text('Reject'),
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
-                      onPressed: () => _handleJoinRequest(context, request, 'approve'),
+                      onPressed: () =>
+                          _handleJoinRequest(context, request, 'approve'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
@@ -148,4 +161,4 @@ class JoinRequestsList extends StatelessWidget {
       return 'Not available';
     }
   }
-} 
+}

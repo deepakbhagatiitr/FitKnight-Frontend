@@ -210,5 +210,8 @@ class GroupService {
     if (response.statusCode != 200) {
       throw Exception('Failed to $action request: ${response.statusCode}');
     }
+
+    // Wait for a moment to ensure the notification is processed
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 }

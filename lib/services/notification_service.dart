@@ -110,8 +110,12 @@ class NotificationService {
         CHANNEL_ID,
         CHANNEL_NAME,
         channelDescription: CHANNEL_DESCRIPTION,
-        importance: Importance.max,
-        priority: Priority.max,
+        importance: notification['type'] == 'request_response'
+            ? Importance.max
+            : Importance.high,
+        priority: notification['type'] == 'request_response'
+            ? Priority.max
+            : Priority.high,
         enableVibration: true,
         playSound: true,
         enableLights: true,
@@ -119,7 +123,7 @@ class NotificationService {
         category: AndroidNotificationCategory.message,
         visibility: NotificationVisibility.public,
         autoCancel: true,
-        fullScreenIntent: true,
+        fullScreenIntent: notification['type'] == 'request_response',
         ongoing: false,
         styleInformation: BigTextStyleInformation(
           notification['message'] ?? '',
@@ -225,6 +229,8 @@ class NotificationService {
                 'message': message,
                 'type': 'request_response',
                 'data': data,
+                'priority': 'high',
+                'importance': 'max',
               });
             }
             // Handle general notifications
