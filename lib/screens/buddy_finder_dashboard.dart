@@ -42,8 +42,8 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
       // Get unique activity types from both buddies and groups
       _activityTypes = {
         ..._recommendedBuddies.expand((b) => b.workoutPreferences),
-        ..._fitnessGroups.map((g) => g.activity),
-      }.where((activity) => activity.isNotEmpty).toList();
+        ..._fitnessGroups.map((g) => g.activity).where((a) => a.isNotEmpty),
+      }.toList();
 
       // Get unique locations
       _locations = {
@@ -75,13 +75,15 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
       });
 
       final buddies = await _buddyFinderService.loadRecommendedBuddies();
-      final groups = await _buddyFinderService.loadFitnessGroups();
+      final groups = await _buddyFinderService.loadMyGroups();
 
-      setState(() {
-        _recommendedBuddies = buddies;
-        _fitnessGroups = groups;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _recommendedBuddies = buddies;
+          _fitnessGroups = groups;
+          _isLoading = false;
+        });
+      }
 
       _updateFilterOptions();
     } catch (e) {
@@ -270,7 +272,7 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
         const SizedBox(height: 24),
         if (filteredGroups.isNotEmpty) ...[
           Text(
-            'Available Fitness Groups',
+            'My Groups',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),

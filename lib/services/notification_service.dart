@@ -210,12 +210,21 @@ class NotificationService {
             // Handle join request notifications
             if (data['type'] == 'join_request') {
               print('Processing join request notification');
-              await showNotification({
-                'title': 'New Join Request',
-                'message': 'A user wants to join your group',
-                'type': 'join_request',
-                'data': data,
-              });
+              final prefs = await SharedPreferences.getInstance();
+              final username = prefs.getString('username');
+
+              // Check if the current user is the group organizer
+              if (data['group_organizer'] == username) {
+                await showNotification({
+                  'title': 'New Join Request',
+                  'message':
+                      '${data['requester_name']} wants to join your group ${data['group_name']}',
+                  'type': 'join_request',
+                  'data': data,
+                  'priority': 'high',
+                  'importance': 'max',
+                });
+              }
             }
             // Handle request response notifications
             else if (data['type'] == 'request_response') {

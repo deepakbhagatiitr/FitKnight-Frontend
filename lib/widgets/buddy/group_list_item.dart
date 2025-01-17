@@ -13,6 +13,7 @@ class GroupListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
         leading: CircleAvatar(
           backgroundImage:
@@ -20,7 +21,7 @@ class GroupListItem extends StatelessWidget {
           child: group.imageUrl.isEmpty ? const Icon(Icons.group) : null,
         ),
         title: Text(group.name),
-        subtitle: Text('${group.activity} • ${group.members} members'),
+        subtitle: Text('${group.activity} • ${group.memberCount} members'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           Navigator.push(
@@ -28,7 +29,7 @@ class GroupListItem extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => GroupDetailsPage(
                 group: group.toJson(),
-                groupId: group.id.toString(),
+                groupId: group.id,
               ),
             ),
           );
@@ -36,4 +37,4 @@ class GroupListItem extends StatelessWidget {
       ),
     );
   }
-} 
+}

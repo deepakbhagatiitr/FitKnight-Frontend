@@ -70,4 +70,34 @@ class BuddyFinderService {
       throw Exception('Failed to load groups: ${response.statusCode}');
     }
   }
+
+  Future<List<Group>> loadMyGroups() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Not logged in');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/my-groups/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      if (jsonResponse['status'] == 'success') {
+        final List<dynamic> data = jsonResponse['groups'];
+        return data.map((group) => Group.fromJson(group)).toList();
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired');
+    } else {
+      throw Exception('Failed to load groups: ${response.statusCode}');
+    }
+  }
 }

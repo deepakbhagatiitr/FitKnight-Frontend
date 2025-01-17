@@ -55,12 +55,15 @@ class GroupService {
     final token = await _getAuthToken();
 
     final response = await http.get(
-      Uri.parse('$_baseUrl/profile/?role=workout_buddy&page_size=100'),
+      Uri.parse('$_baseUrl/profile/?role=workout_buddy&page_size=3'),
       headers: {
         'Authorization': 'Token $token',
         'Content-Type': 'application/json',
       },
     );
+
+    print('Potential members response status: ${response.statusCode}');
+    print('Potential members response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);

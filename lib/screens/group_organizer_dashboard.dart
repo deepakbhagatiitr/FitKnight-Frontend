@@ -23,6 +23,7 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
   final _searchController = TextEditingController();
 
   bool _isLoading = true;
+  bool _showAllMembers = false;
   List<Group> _managedGroups = [];
   List<Member> _potentialMembers = [];
   String _searchQuery = '';
@@ -124,9 +125,23 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
         else
           ..._managedGroups.map((group) => GroupCard(group: group)),
         const SizedBox(height: 24),
-        Text(
-          'Potential Members',
-          style: Theme.of(context).textTheme.headlineSmall,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Potential Members',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            if (_potentialMembers.length > 3)
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _showAllMembers = !_showAllMembers;
+                  });
+                },
+                child: Text(_showAllMembers ? 'Show Less' : 'View All'),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         TextField(
@@ -162,16 +177,19 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
   }
 
   List<Member> _filterMembers() {
+    List<Member> filteredMembers;
     if (_searchQuery.isEmpty) {
-      return _potentialMembers;
+      filteredMembers = _potentialMembers;
+    } else {
+      final query = _searchQuery.toLowerCase();
+      filteredMembers = _potentialMembers.where((member) {
+        return member.username.toLowerCase().contains(query) ||
+            member.location.toLowerCase().contains(query) ||
+            member.availability.toLowerCase().contains(query);
+      }).toList();
     }
-
-    final query = _searchQuery.toLowerCase();
-    return _potentialMembers.where((member) {
-      return member.username.toLowerCase().contains(query) ||
-          member.location.toLowerCase().contains(query) ||
-          member.availability.toLowerCase().contains(query);
-    }).toList();
+    // Return all members if showAllMembers is true, otherwise return only three
+    return _showAllMembers ? filteredMembers : filteredMembers.take(3).toList();
   }
 
   Future<void> _handleCreateGroup(BuildContext context) async {
