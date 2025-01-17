@@ -24,11 +24,33 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
   List<Buddy> _recommendedBuddies = [];
   List<Group> _fitnessGroups = [];
   String _searchQuery = '';
+  String _selectedActivity = '';
+  String _selectedLocation = '';
+
+  // Lists for filter options
+  List<String> _activityTypes = [];
+  List<String> _locations = [];
 
   @override
   void initState() {
     super.initState();
     _checkAuthAndLoadData();
+  }
+
+  void _updateFilterOptions() {
+    setState(() {
+      // Get unique activity types from both buddies and groups
+      _activityTypes = {
+        ..._recommendedBuddies.expand((b) => b.workoutPreferences),
+        ..._fitnessGroups.map((g) => g.activity),
+      }.where((activity) => activity.isNotEmpty).toList();
+
+      // Get unique locations
+      _locations = {
+        ..._recommendedBuddies.map((b) => b.location),
+        ..._fitnessGroups.map((g) => g.location),
+      }.where((location) => location.isNotEmpty).toList();
+    });
   }
 
   Future<void> _checkAuthAndLoadData() async {
@@ -60,6 +82,8 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
         _fitnessGroups = groups;
         _isLoading = false;
       });
+
+      _updateFilterOptions();
     } catch (e) {
       print('Error loading data: $e');
       if (e.toString().contains('401') ||
@@ -84,18 +108,35 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
   }
 
   List<Buddy> get filteredBuddies {
-    final query = _searchQuery.toLowerCase();
     return _recommendedBuddies.where((buddy) {
-      return buddy.name.toLowerCase().contains(query) ||
-          buddy.activity.toLowerCase().contains(query);
+      final matchesSearch = _searchQuery.isEmpty ||
+          buddy.username.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          buddy.workoutPreferences.any((pref) =>
+              pref.toLowerCase().contains(_searchQuery.toLowerCase()));
+
+      final matchesActivity = _selectedActivity.isEmpty ||
+          buddy.workoutPreferences.contains(_selectedActivity);
+
+      final matchesLocation =
+          _selectedLocation.isEmpty || buddy.location == _selectedLocation;
+
+      return matchesSearch && matchesActivity && matchesLocation;
     }).toList();
   }
 
   List<Group> get filteredGroups {
-    final query = _searchQuery.toLowerCase();
     return _fitnessGroups.where((group) {
-      return group.name.toLowerCase().contains(query) ||
-          group.activity.toLowerCase().contains(query);
+      final matchesSearch = _searchQuery.isEmpty ||
+          group.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          group.activity.toLowerCase().contains(_searchQuery.toLowerCase());
+
+      final matchesActivity =
+          _selectedActivity.isEmpty || group.activity == _selectedActivity;
+
+      final matchesLocation =
+          _selectedLocation.isEmpty || group.location == _selectedLocation;
+
+      return matchesSearch && matchesActivity && matchesLocation;
     }).toList();
   }
 
@@ -133,9 +174,8 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
     );
   }
 
-  Widget _buildDashboardContent() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+  Widget _buildFilters() {
+    return Column(
       children: [
         TextField(
           controller: _searchController,
@@ -163,22 +203,69 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
             });
           },
         ),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              if (_activityTypes.isNotEmpty) ...[
+                DropdownButton<String>(
+                  hint: const Text('Activity Type'),
+                  value: _selectedActivity.isEmpty ? null : _selectedActivity,
+                  items: [
+                    const DropdownMenuItem(
+                      value: '',
+                      child: Text('All Activities'),
+                    ),
+                    ..._activityTypes.map((activity) => DropdownMenuItem(
+                          value: activity,
+                          child: Text(activity),
+                        )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedActivity = value ?? '';
+                    });
+                  },
+                ),
+                const SizedBox(width: 16),
+              ],
+              if (_locations.isNotEmpty) ...[
+                DropdownButton<String>(
+                  hint: const Text('Location'),
+                  value: _selectedLocation.isEmpty ? null : _selectedLocation,
+                  items: [
+                    const DropdownMenuItem(
+                      value: '',
+                      child: Text('All Locations'),
+                    ),
+                    ..._locations.map((location) => DropdownMenuItem(
+                          value: location,
+                          child: Text(location),
+                        )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedLocation = value ?? '';
+                    });
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardContent() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildFilters(),
         const SizedBox(height: 24),
         if (filteredBuddies.isNotEmpty) ...[
-          Text(
-            'Recommended Workout Buddies',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: filteredBuddies.length,
-              itemBuilder: (context, index) =>
-                  BuddyCard(buddy: filteredBuddies[index]),
-            ),
-          ),
+          _buildRecommendedBuddies(),
         ],
         const SizedBox(height: 24),
         if (filteredGroups.isNotEmpty) ...[
@@ -194,7 +281,7 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
             child: Padding(
               padding: EdgeInsets.all(32.0),
               child: Text(
-                'No buddies or groups found matching your search',
+                'No buddies or groups found matching your criteria',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -203,6 +290,33 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
               ),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildRecommendedBuddies() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Recommended Workout Buddies',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+        SizedBox(
+          height: 280,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: filteredBuddies.length,
+            itemBuilder: (context, index) {
+              final buddy = filteredBuddies[index];
+              return BuddyCard(buddy: buddy);
+            },
+          ),
+        ),
       ],
     );
   }

@@ -11,6 +11,7 @@ import '../widgets/group_details/description_card.dart';
 import '../widgets/group_details/organizer_contact_card.dart';
 import '../widgets/group_details/members_list.dart';
 import '../widgets/group_details/join_requests_list.dart';
+import '../widgets/group_details/goals_card.dart';
 
 class GroupDetailsPage extends StatefulWidget {
   final Map<String, dynamic> group;
@@ -228,6 +229,8 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
           ScheduleLocationCard(groupData: _groupDetails!),
           const SizedBox(height: 16),
           DescriptionCard(groupData: _groupDetails!),
+          const SizedBox(height: 16),
+          GoalsCard(goals: _groupDetails!.goals),
           const SizedBox(height: 16),
           if (!widget.isOrganizer)
             OrganizerContactCard(groupData: _groupDetails!),

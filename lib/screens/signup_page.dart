@@ -20,7 +20,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final _authService = AuthService();
-  
+
   // Controllers
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -78,9 +78,11 @@ class _SignUpPageState extends State<SignUpPage> {
         return;
       }
 
-      if (_selectedRole == UserRole.workoutBuddy && _workoutPreferences.isEmpty) {
+      if (_selectedRole == UserRole.workoutBuddy &&
+          _workoutPreferences.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one workout preference')),
+          const SnackBar(
+              content: Text('Please select at least one workout preference')),
         );
         return;
       }
@@ -218,7 +220,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
 
                 const SizedBox(height: 24),
-                
+
                 // Sign Up Button
                 FilledButton(
                   onPressed: _handleSignUp,
@@ -232,7 +234,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
 
                 const SizedBox(height: 16),
-                
+
                 // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

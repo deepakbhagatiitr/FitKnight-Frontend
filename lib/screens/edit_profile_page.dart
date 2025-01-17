@@ -54,7 +54,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _showEmail = widget.profile.privacySettings['showEmail'] ?? true;
     _showPhone = widget.profile.privacySettings['showPhone'] ?? true;
     _showLocation = widget.profile.privacySettings['showLocation'] ?? true;
-    _selectedWorkoutPreferences = List.from(widget.profile.workoutPreferences);
+
+    // Initialize workout preferences with proper casing to match options
+    _selectedWorkoutPreferences = widget.profile.workoutPreferences
+        .map((pref) => _workoutOptions.firstWhere(
+              (option) => option.toLowerCase() == pref.toLowerCase(),
+              orElse: () => pref,
+            ))
+        .toList();
   }
 
   Future<void> _pickImage() async {
@@ -80,11 +87,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      final userId = prefs.getInt('userId');
+      final username = prefs.getString('username');
+
+      if (username == null) {
+        throw Exception('Username not found');
+      }
 
       final request = http.MultipartRequest(
         'PUT',
-        Uri.parse('http://10.81.1.137:8000/api/profile/$userId/'),
+        Uri.parse('http://10.81.1.137:8000/api/profile/$username/'),
       );
 
       request.headers.addAll({
@@ -137,7 +148,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
 
         final updatedProfile = Profile(
-          userId: widget.profile.userId,
+          userId: username,
           name: jsonResponse['username'] ?? '',
           bio: jsonResponse['fitness_goals'] ?? '',
           imageUrl: imageUrl,
@@ -150,10 +161,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
             'phone': jsonResponse['phone_number'] ?? '',
             'location': jsonResponse['user_location'] ?? '',
           },
-          privacySettings: privacySettings, // Use the local privacy settings
+          privacySettings: privacySettings,
           fitnessHistory: widget.profile.fitnessHistory,
           groupGoals: widget.profile.groupGoals,
           groupActivities: widget.profile.groupActivities,
+          role: widget.profile.role,
+          groupName: widget.profile.groupName,
+          activityType: widget.profile.activityType,
+          schedule: widget.profile.schedule,
         );
 
         if (mounted) {

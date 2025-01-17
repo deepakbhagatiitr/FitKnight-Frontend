@@ -14,13 +14,14 @@ class GroupOrganizerDashboard extends StatefulWidget {
   const GroupOrganizerDashboard({super.key});
 
   @override
-  State<GroupOrganizerDashboard> createState() => _GroupOrganizerDashboardState();
+  State<GroupOrganizerDashboard> createState() =>
+      _GroupOrganizerDashboardState();
 }
 
 class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
   final _groupService = GroupService();
   final _searchController = TextEditingController();
-  
+
   bool _isLoading = true;
   List<Group> _managedGroups = [];
   List<Member> _potentialMembers = [];
@@ -63,7 +64,8 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
       });
     } catch (e) {
       print('Error loading data: $e');
-      if (e.toString().contains('401') || e.toString().contains('Not logged in')) {
+      if (e.toString().contains('401') ||
+          e.toString().contains('Not logged in')) {
         await _handleLogout();
       }
       setState(() {
@@ -130,11 +132,22 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
         TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: 'Search members',
+            hintText: 'Search by name, location, or availability',
             prefixIcon: const Icon(Icons.search),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        _searchQuery = '';
+                      });
+                    },
+                  )
+                : null,
           ),
           onChanged: (value) {
             setState(() {
@@ -149,10 +162,15 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
   }
 
   List<Member> _filterMembers() {
+    if (_searchQuery.isEmpty) {
+      return _potentialMembers;
+    }
+
     final query = _searchQuery.toLowerCase();
     return _potentialMembers.where((member) {
       return member.username.toLowerCase().contains(query) ||
-          member.fitnessGoals.toLowerCase().contains(query);
+          member.location.toLowerCase().contains(query) ||
+          member.availability.toLowerCase().contains(query);
     }).toList();
   }
 

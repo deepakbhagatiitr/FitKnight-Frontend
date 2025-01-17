@@ -28,11 +28,16 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadUserInfo() async {
+    if (!mounted) return;
+
+    setState(() => _isLoading = true);
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final userType = prefs.getString('userType');
-
       final profile = await _profileService.loadUserProfile();
+
+      if (!mounted) return;
 
       setState(() {
         _userType = userType;
@@ -41,17 +46,15 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (e) {
       print('Error loading user profile: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading profile: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      setState(() {
-        _isLoading = false;
-      });
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading profile: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _isLoading = false);
     }
   }
 
@@ -67,53 +70,92 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _profile == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_userType == 'group' ? 'Organizer Profile' : 'My Profile'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _handleEditProfile(context),
-          ),
+          if (!_isLoading && _profile != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _handleEditProfile(context),
+            ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ProfileHeader(
-              profile: _profile!,
-              getProfileImage: _getProfileImage,
-            ),
-            ContactInfoCard(profile: _profile!),
-            if (_userType == 'buddy')
-              WorkoutPreferencesCard(
-                preferences: _profile!.workoutPreferences,
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading profile...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
-            if (_userType == 'buddy') _buildFitnessSection(),
-            if (_userType == 'group') _buildGroupSection(),
-          ],
-        ),
-      ),
+            )
+          : _profile == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Could not load profile data',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadUserInfo,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadUserInfo,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ProfileHeader(
+                          profile: _profile!,
+                          getProfileImage: _getProfileImage,
+                        ),
+                        ContactInfoCard(profile: _profile!),
+                        if (_userType == 'buddy')
+                          WorkoutPreferencesCard(
+                            preferences: _profile!.workoutPreferences,
+                          ),
+                        if (_userType == 'buddy') _buildFitnessSection(),
+                        if (_userType == 'group') _buildGroupSection(),
+                      ],
+                    ),
+                  ),
+                ),
     );
   }
 
   Future<void> _handleEditProfile(BuildContext context) async {
+    if (_profile == null) return;
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditProfilePage(profile: _profile!),
       ),
     );
-    if (result != null) {
+
+    if (result != null && result is Profile) {
+      if (!mounted) return;
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(
           'showEmail', result.privacySettings['showEmail'] ?? true);
@@ -202,34 +244,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildGoalCard(Map<String, dynamic> goal) {
+  Widget _buildGoalCard(String goal) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              goal['title'] ?? '',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(goal['description'] ?? ''),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: goal['progress']?.toDouble() ?? 0.0,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${goal['current']} / ${goal['target']}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            Text(
-              'Deadline: ${goal['deadline']}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ListTile(
+        leading: const Icon(Icons.flag),
+        title: Text(goal),
       ),
     );
   }

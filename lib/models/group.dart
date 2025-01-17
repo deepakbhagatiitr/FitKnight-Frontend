@@ -11,6 +11,7 @@ class Group {
   final String organizerName;
   final int memberCount;
   final int members;
+  final String skillLevel;
 
   Group({
     required this.id,
@@ -25,6 +26,7 @@ class Group {
     required this.organizerName,
     required this.memberCount,
     required this.members,
+    required this.skillLevel,
   });
 
   factory Group.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class Group {
       organizerName: json['organizer_name'] ?? '',
       memberCount: (json['members'] as List?)?.length ?? 0,
       members: (json['members'] as List?)?.length ?? 0,
+      skillLevel: json['skill_level'] ?? 'Intermediate',
     );
   }
 
@@ -63,6 +66,7 @@ class Group {
       'created_at': createdAt,
       'organizer_name': organizerName,
       'member_count': memberCount,
+      'skill_level': skillLevel,
     };
   }
 }

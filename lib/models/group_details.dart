@@ -1,3 +1,39 @@
+class Goal {
+  final String id;
+  final String title;
+  final String description;
+  final String type; // 'daily' or 'weekly'
+  final bool isCompleted;
+
+  Goal({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.type,
+    required this.isCompleted,
+  });
+
+  factory Goal.fromJson(Map<String, dynamic> json) {
+    return Goal(
+      id: json['id'].toString(),
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      type: json['type'] ?? '',
+      isCompleted: json['is_completed'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'type': type,
+      'is_completed': isCompleted,
+    };
+  }
+}
+
 class GroupDetails {
   final String id;
   final String name;
@@ -8,6 +44,10 @@ class GroupDetails {
   final String createdAt;
   final String organizerName;
   final bool isOrganizer;
+  final List<Goal> goals;
+  final String organizerPhone;
+  final String organizerEmail;
+  final String organizerLocation;
 
   GroupDetails({
     required this.id,
@@ -19,10 +59,73 @@ class GroupDetails {
     required this.createdAt,
     required this.organizerName,
     required this.isOrganizer,
+    required this.goals,
+    required this.organizerPhone,
+    required this.organizerEmail,
+    required this.organizerLocation,
   });
 
   factory GroupDetails.fromJson(
       Map<String, dynamic> json, String currentUsername) {
+    List<Goal> goals = [];
+
+    // Parse goals from API if available, otherwise use dummy data
+    if (json['goals'] != null) {
+      goals =
+          (json['goals'] as List).map((goal) => Goal.fromJson(goal)).toList();
+    } else {
+      // Create dummy goals data
+      goals = [
+        // Daily Goals
+        Goal(
+          id: '1',
+          title: 'Morning Workout',
+          description: '30 minutes cardio session',
+          type: 'daily',
+          isCompleted: false,
+        ),
+        Goal(
+          id: '2',
+          title: 'Evening Workout',
+          description: '45 minutes strength training',
+          type: 'daily',
+          isCompleted: true,
+        ),
+        Goal(
+          id: '3',
+          title: 'Stretching',
+          description: '15 minutes flexibility exercises',
+          type: 'daily',
+          isCompleted: false,
+        ),
+        // Weekly Goals
+        Goal(
+          id: '4',
+          title: 'Distance Target',
+          description: 'Run 20km total',
+          type: 'weekly',
+          isCompleted: false,
+        ),
+        Goal(
+          id: '5',
+          title: 'Group Sessions',
+          description: 'Attend 3 group workouts',
+          type: 'weekly',
+          isCompleted: false,
+        ),
+        Goal(
+          id: '6',
+          title: 'Weight Training',
+          description: 'Complete 4 strength sessions',
+          type: 'weekly',
+          isCompleted: false,
+        ),
+      ];
+    }
+
+    // Get organizer profile information from the json
+    final organizerProfile = json['organizer_profile'] ?? {};
+
     return GroupDetails(
       id: json['id'].toString(),
       name: json['name'] ?? '',
@@ -33,6 +136,10 @@ class GroupDetails {
       createdAt: json['created_at'] ?? '',
       organizerName: json['organizer_name'] ?? '',
       isOrganizer: (json['organizer_name'] ?? '') == currentUsername,
+      goals: goals,
+      organizerPhone: organizerProfile['phone_number'] ?? '',
+      organizerEmail: organizerProfile['email'] ?? '',
+      organizerLocation: organizerProfile['location'] ?? '',
     );
   }
 
@@ -47,6 +154,10 @@ class GroupDetails {
       'created_at': createdAt,
       'organizer_name': organizerName,
       'is_organizer': isOrganizer,
+      'goals': goals.map((goal) => goal.toJson()).toList(),
+      'organizer_phone': organizerPhone,
+      'organizer_email': organizerEmail,
+      'organizer_location': organizerLocation,
     };
   }
 }

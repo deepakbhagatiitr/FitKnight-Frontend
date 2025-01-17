@@ -19,9 +19,20 @@ class WorkoutPreferencesCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Workout Preferences',
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              children: [
+                Icon(
+                  Icons.fitness_center,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Workout Preferences',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -29,12 +40,21 @@ class WorkoutPreferencesCard extends StatelessWidget {
               runSpacing: 8,
               children: preferences
                   .map((pref) => Chip(
-                        label: Text(pref),
+                        avatar:
+                            const Icon(Icons.check_circle_outline, size: 18),
+                        label: Text(
+                          pref,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                        ),
                         backgroundColor:
                             Theme.of(context).colorScheme.primaryContainer,
-                        labelStyle: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onPrimaryContainer),
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                       ))
                   .toList(),
             ),
@@ -43,4 +63,4 @@ class WorkoutPreferencesCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

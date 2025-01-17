@@ -111,11 +111,13 @@ class AuthService {
         'availability': formData.availability ?? '',
       });
     } else {
+      // For group organizer
       fields.addAll({
         'group_name': formData.groupName ?? '',
         'activity_type': formData.activityType ?? '',
         'schedule': formData.schedule ?? '',
-        'description': formData.description ?? '',
+        'description':
+            formData.description ?? '', // Using 'description' as per API spec
       });
     }
 
@@ -132,14 +134,20 @@ class AuthService {
       );
     }
 
-    final response = await request.send();
-    final responseData = await response.stream.bytesToString();
+    try {
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      print('Signup response: $responseData'); // Debug print
 
-    if (response.statusCode != 201) {
-      final errorData = jsonDecode(responseData);
-      throw Exception(errorData['message'] ??
-          errorData.entries.map((e) => '${e.key}: ${e.value}').join(', ') ??
-          'Registration failed');
+      if (response.statusCode != 201) {
+        final errorData = jsonDecode(responseData);
+        throw Exception(errorData['message'] ??
+            errorData.entries.map((e) => '${e.key}: ${e.value}').join(', ') ??
+            'Registration failed');
+      }
+    } catch (e) {
+      print('Signup error: $e'); // Debug print
+      throw Exception('Registration failed: $e');
     }
   }
 

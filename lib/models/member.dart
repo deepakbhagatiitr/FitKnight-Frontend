@@ -9,6 +9,7 @@ class Member {
   final String fitnessGoals;
   final List<String> workoutPreferences;
   final String availability;
+  final String location;
 
   Member({
     required this.id,
@@ -21,6 +22,7 @@ class Member {
     required this.fitnessGoals,
     required this.workoutPreferences,
     required this.availability,
+    required this.location,
   });
 
   factory Member.fromJson(Map<String, dynamic> json) {
@@ -46,6 +48,7 @@ class Member {
               .toList() ??
           [],
       availability: json['availability'] ?? '',
+      location: json['user_location'] ?? '',
     );
   }
 
@@ -60,6 +63,7 @@ class Member {
       'fitness_goals': fitnessGoals,
       'workout_preferences': workoutPreferences,
       'availability': availability,
+      'user_location': location,
     };
   }
 }

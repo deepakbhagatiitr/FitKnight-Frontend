@@ -9,14 +9,14 @@ class ProfileService {
   Future<Profile> loadUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    final userId = prefs.getString('userId');
+    final username = prefs.getString('username');
 
-    if (userId == null) {
-      throw Exception('User ID not found');
+    if (username == null) {
+      throw Exception('Username not found');
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/profile/$userId/'),
+      Uri.parse('$baseUrl/profile/$username/'),
       headers: {
         'Authorization': 'Token $token',
         'Content-Type': 'application/json',
@@ -24,48 +24,67 @@ class ProfileService {
     );
 
     if (response.statusCode == 200) {
-      final userData = jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
 
-      final Map<String, String> contactInfo = {
-        'email': (userData['email'] ?? '').toString(),
-        'phone': (userData['phone_number'] ?? '').toString(),
-        'location': (userData['user_location'] ?? '').toString(),
-      };
+      if (responseData['status'] == 'success' && responseData['data'] != null) {
+        final userData = responseData['data'];
 
-      final Map<String, bool> privacySettings = {
-        'showEmail': prefs.getBool('showEmail') ?? true,
-        'showPhone': prefs.getBool('showPhone') ?? true,
-        'showLocation': prefs.getBool('showLocation') ?? true,
-      };
+        final Map<String, String> contactInfo = {
+          'email': (userData['email'] ?? '').toString(),
+          'phone': (userData['phone_number'] ?? '').toString(),
+          'location': (userData['user_location'] ?? '').toString(),
+        };
 
-      String fitnessGoals = '';
-      if (userData['fitness_goals'] != null) {
-        try {
-          if (userData['fitness_goals'] is String) {
-            fitnessGoals = userData['fitness_goals'];
-          } else {
-            fitnessGoals = json.encode(userData['fitness_goals']);
+        final Map<String, bool> privacySettings = {
+          'showEmail': prefs.getBool('showEmail') ?? true,
+          'showPhone': prefs.getBool('showPhone') ?? true,
+          'showLocation': prefs.getBool('showLocation') ?? true,
+        };
+
+        String fitnessGoals = '';
+        if (userData['fitness_goals'] != null) {
+          try {
+            if (userData['fitness_goals'] is String) {
+              fitnessGoals = userData['fitness_goals'];
+            } else {
+              fitnessGoals = json.encode(userData['fitness_goals']);
+            }
+          } catch (e) {
+            print('Error parsing fitness goals: $e');
+            fitnessGoals = userData['fitness_goals']?.toString() ?? '';
           }
-        } catch (e) {
-          print('Error parsing fitness goals: $e');
-          fitnessGoals = userData['fitness_goals']?.toString() ?? '';
         }
-      }
 
-      return Profile(
-        userId: userId,
-        name: userData['username'] ?? '',
-        bio: fitnessGoals,
-        imageUrl: userData['profile_image']?.toString() ?? '',
-        workoutPreferences:
-            _parseWorkoutPreferences(userData['workout_preferences']),
-        contactInfo: contactInfo,
-        privacySettings: privacySettings,
-        fitnessHistory: [],
-        groupGoals: [],
-        groupActivities: [],
-        role: userData['role'] ?? '',
-      );
+        // Handle group organizer specific fields
+        String groupName = '';
+        String activityType = '';
+        String schedule = '';
+        if (userData['role'] == 'group_organizer') {
+          groupName = userData['group_name'] ?? '';
+          activityType = userData['activity_type'] ?? '';
+          schedule = userData['schedule'] ?? '';
+        }
+
+        return Profile(
+          userId: username,
+          name: userData['username'] ?? '',
+          bio: fitnessGoals,
+          imageUrl: userData['profile_image']?.toString() ?? '',
+          workoutPreferences:
+              _parseWorkoutPreferences(userData['workout_preferences']),
+          contactInfo: contactInfo,
+          privacySettings: privacySettings,
+          fitnessHistory: [],
+          groupGoals: [],
+          groupActivities: [],
+          role: userData['role'] ?? '',
+          groupName: groupName,
+          activityType: activityType,
+          schedule: schedule,
+        );
+      } else {
+        throw Exception('Invalid profile data format');
+      }
     } else {
       throw Exception('Failed to load profile: ${response.statusCode}');
     }
@@ -73,13 +92,37 @@ class ProfileService {
 
   List<String> _parseWorkoutPreferences(dynamic preferences) {
     if (preferences == null) return [];
+
+    Set<String> uniquePreferences = {};
+
     try {
       if (preferences is List) {
-        return List<String>.from(preferences.map((e) => e.toString()));
+        for (var pref in preferences) {
+          if (pref is String) {
+            if (pref.startsWith('[')) {
+              // Parse nested JSON string
+              List<dynamic> parsed = jsonDecode(pref);
+              uniquePreferences.addAll(parsed.map((p) => p.toString()));
+            } else {
+              uniquePreferences.add(pref);
+            }
+          }
+        }
       }
     } catch (e) {
       print('Error parsing workout preferences: $e');
     }
-    return [];
+
+    // Capitalize each preference
+    return uniquePreferences
+        .map((pref) => pref
+            .toString()
+            .trim()
+            .split(' ')
+            .map((word) => word.isNotEmpty
+                ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+                : '')
+            .join(' '))
+        .toList();
   }
 }
