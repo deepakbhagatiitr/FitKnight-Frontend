@@ -67,12 +67,92 @@ class _LoginPageState extends State<LoginPage> {
         );
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+
+        if (e is UserNotFoundException) {
+          // Show sign up dialog for unregistered users
+          showDialog(
+            context: context,
+            barrierDismissible: false, // User must choose an option
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text(
+                  'Account Not Found',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'This username is not registered in our system.',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Would you like to create a new account?',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _passwordController
+                          .clear(); // Clear password for security
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SignUpPage()),
+                      );
+                    },
+                    child: const Text('Sign Up'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          // Show error dialog for other errors
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text(
+                  'Login Failed',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+                content: Text(
+                  e.toString().replaceAll('Exception: ', ''),
+                  style: const TextStyle(fontSize: 16),
+                ),
+                actions: [
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _passwordController
+                          .clear(); // Clear password for security
+                    },
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       } finally {
         if (mounted) {
           setState(() {

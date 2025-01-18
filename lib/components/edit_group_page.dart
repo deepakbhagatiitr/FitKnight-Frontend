@@ -78,7 +78,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
       print('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.put(
-        Uri.parse('http://10.81.1.137:8000/api/groups/${widget.groupId}/'),
+        Uri.parse('http://10.81.1.209:8000/api/groups/${widget.groupId}/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',

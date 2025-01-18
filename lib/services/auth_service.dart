@@ -7,8 +7,16 @@ import 'package:provider/provider.dart';
 import '../providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 
+// Custom exception for user not found
+class UserNotFoundException implements Exception {
+  final String message;
+  UserNotFoundException(this.message);
+  @override
+  String toString() => message;
+}
+
 class AuthService {
-  static const String baseUrl = 'http://10.81.1.137:8000/api';
+  static const String baseUrl = 'http://10.81.1.209:8000/api';
   static final AuthService _instance = AuthService._internal();
 
   factory AuthService() {
@@ -32,7 +40,7 @@ class AuthService {
       final data = json.decode(response.body);
       print('Login response: $data'); // Debug print
 
-      if (response.statusCode == 200) {
+      if (data['status'] == 'success') {
         // Extract user data
         final userId = data['user']?['id']?.toString() ?? '';
         final userData = data['user'] as Map<String, dynamic>;
@@ -74,13 +82,24 @@ class AuthService {
 
         return data;
       } else {
-        print(
-            'Login failed with status ${response.statusCode}: ${response.body}');
-        throw Exception(data['message'] ?? data['detail'] ?? 'Login failed');
+        final message = data['message'] ?? 'Login failed';
+
+        // Check for specific error messages
+        if (message.toLowerCase().contains('not registered') ||
+            message.toLowerCase().contains('user is not registered')) {
+          throw UserNotFoundException(
+              'User is not registered. Please sign up first.');
+        }
+
+        if (message.toLowerCase().contains('invalid username or password')) {
+          throw Exception('Invalid username or password. Please try again.');
+        }
+
+        throw Exception(message);
       }
     } catch (e) {
       print('Login error: $e');
-      throw Exception('Login failed: $e');
+      rethrow;
     }
   }
 

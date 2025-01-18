@@ -97,7 +97,7 @@ class BasicInfoForm extends StatelessWidget {
           obscureText: !isPasswordVisible,
           decoration: InputDecoration(
             labelText: 'Password',
-            hintText: 'Enter your password',
+            hintText: 'Enter alphanumeric password',
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               icon: Icon(
@@ -108,6 +108,8 @@ class BasicInfoForm extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            helperText: 'Password must contain only letters and numbers',
+            helperMaxLines: 2,
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -115,6 +117,9 @@ class BasicInfoForm extends StatelessWidget {
             }
             if (value.length < 6) {
               return 'Password must be at least 6 characters';
+            }
+            if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+              return 'Password can only contain letters and numbers';
             }
             return null;
           },
@@ -129,9 +134,12 @@ class BasicInfoForm extends StatelessWidget {
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               icon: Icon(
-                isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                isConfirmPasswordVisible
+                    ? Icons.visibility_off
+                    : Icons.visibility,
               ),
-              onPressed: () => onConfirmPasswordVisibilityChanged(!isConfirmPasswordVisible),
+              onPressed: () =>
+                  onConfirmPasswordVisibilityChanged(!isConfirmPasswordVisible),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -143,6 +151,9 @@ class BasicInfoForm extends StatelessWidget {
             }
             if (value != passwordController.text) {
               return 'Passwords do not match';
+            }
+            if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+              return 'Password can only contain letters and numbers';
             }
             return null;
           },
@@ -164,4 +175,4 @@ class BasicInfoForm extends StatelessWidget {
       ],
     );
   }
-} 
+}

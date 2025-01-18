@@ -38,7 +38,7 @@ class _GroupPageState extends State<GroupPage> {
 
       print('\n=== Loading Groups ===');
       final response = await http.get(
-        Uri.parse('http://10.81.1.137:8000/api/groups/'),
+        Uri.parse('http://10.81.1.209:8000/api/groups/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ class _GroupPageState extends State<GroupPage> {
           _groups = data.map((group) {
             String imageUrl = group['group_image'] ?? '';
             if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-              imageUrl = 'http://10.81.1.137:8000$imageUrl';
+              imageUrl = 'http://10.81.1.209:8000$imageUrl';
             }
 
             return {

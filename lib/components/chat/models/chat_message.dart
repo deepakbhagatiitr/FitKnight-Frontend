@@ -16,7 +16,7 @@ class ChatMessage {
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     String imageUrl = json['sender_image']?.toString() ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.1.137:8000$imageUrl';
+      imageUrl = 'http://10.81.1.209:8000$imageUrl';
     }
 
     return ChatMessage(

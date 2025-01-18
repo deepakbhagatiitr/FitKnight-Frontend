@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 
 class ChatService {
-  static const String _baseUrl = 'http://10.81.1.137:8000/api';
+  static const String _baseUrl = 'http://10.81.1.209:8000/api';
 
   Future<String?> _getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();

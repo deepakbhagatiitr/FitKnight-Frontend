@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
-  static const String baseUrl = 'http://10.81.1.137:8000/api';
+  static const String baseUrl = 'http://10.81.1.209:8000/api';
   static WebSocketChannel? _channel;
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -110,12 +110,8 @@ class NotificationService {
         CHANNEL_ID,
         CHANNEL_NAME,
         channelDescription: CHANNEL_DESCRIPTION,
-        importance: notification['type'] == 'request_response'
-            ? Importance.max
-            : Importance.high,
-        priority: notification['type'] == 'request_response'
-            ? Priority.max
-            : Priority.high,
+        importance: Importance.max,
+        priority: Priority.max,
         enableVibration: true,
         playSound: true,
         enableLights: true,
@@ -123,7 +119,7 @@ class NotificationService {
         category: AndroidNotificationCategory.message,
         visibility: NotificationVisibility.public,
         autoCancel: true,
-        fullScreenIntent: notification['type'] == 'request_response',
+        fullScreenIntent: true,
         ongoing: false,
         styleInformation: BigTextStyleInformation(
           notification['message'] ?? '',
@@ -180,19 +176,20 @@ class NotificationService {
 
     try {
       // Close existing connection if any
-      _channel?.sink.close();
+      await _channel?.sink.close();
       _channel = null;
 
       // Get user ID from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
+      final username = prefs.getString('username');
 
       if (userId == null) {
         throw Exception('User ID not found');
       }
 
       final wsUrl = Uri.parse(
-          'ws://10.81.1.137:8000/ws/notifications/?token=$token&user_id=$userId');
+          'ws://10.81.1.209:8000/ws/notifications/?token=$token&user_id=$userId');
       print('Connecting to WebSocket: $wsUrl');
 
       _channel = WebSocketChannel.connect(wsUrl);
@@ -210,9 +207,6 @@ class NotificationService {
             // Handle join request notifications
             if (data['type'] == 'join_request') {
               print('Processing join request notification');
-              final prefs = await SharedPreferences.getInstance();
-              final username = prefs.getString('username');
-
               // Check if the current user is the group organizer
               if (data['group_organizer'] == username) {
                 await showNotification({
@@ -251,6 +245,8 @@ class NotificationService {
                 'message': notificationData['message'] ?? '',
                 'type': notificationData['type'] ?? 'general',
                 'data': notificationData,
+                'priority': 'high',
+                'importance': 'max',
               });
             }
           } catch (e, stackTrace) {
@@ -267,7 +263,7 @@ class NotificationService {
           print('WebSocket connection closed');
           _handleReconnect(token);
         },
-        cancelOnError: true,
+        cancelOnError: false,
       );
     } catch (e) {
       print('WebSocket connection error: $e');
