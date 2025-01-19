@@ -16,7 +16,7 @@ class UserNotFoundException implements Exception {
 }
 
 class AuthService {
-  static const String baseUrl = 'http://10.81.1.209:8000/api';
+  static const String baseUrl = 'http://10.81.88.76:8000/api';
   static final AuthService _instance = AuthService._internal();
 
   factory AuthService() {
@@ -135,8 +135,7 @@ class AuthService {
         'group_name': formData.groupName ?? '',
         'activity_type': formData.activityType ?? '',
         'schedule': formData.schedule ?? '',
-        'description':
-            formData.description ?? '', // Using 'description' as per API spec
+        'description': formData.description ?? '',
       });
     }
 
@@ -163,6 +162,36 @@ class AuthService {
         throw Exception(errorData['message'] ??
             errorData.entries.map((e) => '${e.key}: ${e.value}').join(', ') ??
             'Registration failed');
+      }
+
+      // If user is a group organizer, create their group
+      if (formData.role == UserRole.groupOrganizer) {
+        final responseJson = jsonDecode(responseData);
+        final token = responseJson['token'];
+
+        if (token != null) {
+          // Create group using the token from registration
+          final groupResponse = await http.post(
+            Uri.parse('$baseUrl/groups/'),
+            headers: {
+              'Authorization': 'Token $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'name': formData.groupName,
+              'activity_type': formData.activityType,
+              'schedule': formData.schedule,
+              'description': formData.description,
+              'location': formData.location,
+            }),
+          );
+
+          print('Group creation response: ${groupResponse.body}');
+
+          if (groupResponse.statusCode != 201) {
+            throw Exception('Failed to create group: ${groupResponse.body}');
+          }
+        }
       }
     } catch (e) {
       print('Signup error: $e'); // Debug print

@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
-  static const String baseUrl = 'http://10.81.1.209:8000/api';
+  static const String baseUrl = 'http://10.81.88.76:8000/api';
   static WebSocketChannel? _channel;
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -189,7 +189,7 @@ class NotificationService {
       }
 
       final wsUrl = Uri.parse(
-          'ws://10.81.1.209:8000/ws/notifications/?token=$token&user_id=$userId');
+          'ws://10.81.88.76:8000/ws/notifications/?token=$token&user_id=$userId');
       print('Connecting to WebSocket: $wsUrl');
 
       _channel = WebSocketChannel.connect(wsUrl);
@@ -220,6 +220,50 @@ class NotificationService {
                 });
               }
             }
+            // Handle chat message notifications
+            else if (data['type'] == 'group_chat') {
+              print('Processing chat message notification');
+              await showNotification({
+                'title': 'New Message',
+                'message': data['message'],
+                'type': 'chat_message',
+                'data': data,
+                'priority': 'high',
+                'importance': 'max',
+              });
+            }
+            // Handle notifications (including chat messages)
+            else if (data['type'] == 'notification') {
+              print('Processing notification: ${data['data']}');
+              final notificationData = data['data'];
+
+              // Handle chat messages specifically
+              if (notificationData['notification_type'] == 'group_chat') {
+                print('Processing group chat notification');
+                await showNotification({
+                  'title': notificationData['title'] ?? 'New Message',
+                  'message': notificationData['message'] ?? '',
+                  'type': 'chat_message',
+                  'data': {
+                    'room_id': notificationData['related_object_id'],
+                    'is_read': notificationData['is_read'] ?? false,
+                    ...notificationData,
+                  },
+                  'priority': 'high',
+                  'importance': 'max',
+                });
+              } else {
+                // Handle other types of notifications
+                await showNotification({
+                  'title': notificationData['title'] ?? 'New Notification',
+                  'message': notificationData['message'] ?? '',
+                  'type': notificationData['notification_type'] ?? 'general',
+                  'data': notificationData,
+                  'priority': 'high',
+                  'importance': 'max',
+                });
+              }
+            }
             // Handle request response notifications
             else if (data['type'] == 'request_response') {
               print('Processing request response notification');
@@ -232,19 +276,6 @@ class NotificationService {
                 'message': message,
                 'type': 'request_response',
                 'data': data,
-                'priority': 'high',
-                'importance': 'max',
-              });
-            }
-            // Handle general notifications
-            else if (data['type'] == 'notification') {
-              print('Processing general notification');
-              final notificationData = data['data'] ?? data;
-              await showNotification({
-                'title': notificationData['title'] ?? 'New Notification',
-                'message': notificationData['message'] ?? '',
-                'type': notificationData['type'] ?? 'general',
-                'data': notificationData,
                 'priority': 'high',
                 'importance': 'max',
               });

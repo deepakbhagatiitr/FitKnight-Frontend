@@ -26,6 +26,15 @@ class BasicInfoForm extends StatelessWidget {
     required this.onConfirmPasswordVisibilityChanged,
   });
 
+  static const List<String> locations = [
+    'Delhi',
+    'Mumbai',
+    'Noida',
+    'Punjab',
+    'Haryana',
+    'Gurugram',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -159,17 +168,31 @@ class BasicInfoForm extends StatelessWidget {
           },
         ),
         const SizedBox(height: 16),
-        TextFormField(
-          controller: locationController,
+        DropdownButtonFormField<String>(
+          value:
+              locationController.text.isEmpty ? null : locationController.text,
           decoration: const InputDecoration(
             labelText: 'Location',
             prefixIcon: Icon(Icons.location_on),
+            border: OutlineInputBorder(),
           ),
+          hint: const Text('Select your location'),
+          items: locations.map((String location) {
+            return DropdownMenuItem<String>(
+              value: location,
+              child: Text(location),
+            );
+          }).toList(),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your location';
+              return 'Please select your location';
             }
             return null;
+          },
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              locationController.text = newValue;
+            }
           },
         ),
       ],

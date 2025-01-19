@@ -25,7 +25,8 @@ class MessageBubble extends StatelessWidget {
         right: isCurrentUser ? 0 : 50,
       ),
       child: Column(
-        crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           if (showSenderInfo) _buildSenderInfo(senderUsername),
           _buildMessageContent(),
@@ -58,7 +59,8 @@ class MessageBubble extends StatelessWidget {
         left: !isCurrentUser && !showSenderInfo ? 40 : 0,
       ),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser && showSenderInfo) ...[
@@ -75,7 +77,8 @@ class MessageBubble extends StatelessWidget {
     final profileImage = message.sender['profile_image'];
     return CircleAvatar(
       radius: 16,
-      backgroundImage: profileImage?.isNotEmpty == true ? NetworkImage(profileImage) : null,
+      backgroundImage:
+          profileImage?.isNotEmpty == true ? NetworkImage(profileImage) : null,
       backgroundColor: Colors.grey[200],
       child: profileImage?.isEmpty ?? true
           ? const Icon(Icons.person, size: 16, color: Colors.grey)
@@ -122,32 +125,15 @@ class MessageBubble extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          _buildMessageMetadata(),
+          Text(
+            TimeFormatter.formatTimestamp(message.createdAt),
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[600],
+            ),
+          ),
         ],
       ),
     );
   }
-
-  Widget _buildMessageMetadata() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          TimeFormatter.formatTimestamp(message.createdAt),
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-          ),
-        ),
-        if (isCurrentUser) ...[
-          const SizedBox(width: 3),
-          Icon(
-            message.isRead ? Icons.done_all : Icons.done,
-            size: 14,
-            color: message.isRead ? const Color(0xFF34B7F1) : Colors.grey[600],
-          ),
-        ],
-      ],
-    );
-  }
-} 
+}

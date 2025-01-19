@@ -19,6 +19,24 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final _descriptionController = TextEditingController();
   bool _isLoading = false;
 
+  static const List<String> activityTypes = [
+    'Boxing',
+    'Judo',
+    'Kickboxing',
+    'Muay Thai',
+    'Sambo',
+    'Karate',
+    'Taekwondo',
+    'Kung Fu',
+    'Aikido',
+  ];
+
+  static const List<String> scheduleOptions = [
+    'Morning',
+    'Afternoon',
+    'Evening',
+  ];
+
   Future<void> _createGroup() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -47,7 +65,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       print('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
-        Uri.parse('http://10.81.1.209:8000/api/groups/'),
+        Uri.parse('http://10.81.88.76:8000/api/groups/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -134,70 +152,66 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _activityTypeController,
+                            DropdownButtonFormField<String>(
+                              value: _activityTypeController.text.isEmpty
+                                  ? null
+                                  : activityTypes.contains(
+                                          _activityTypeController.text)
+                                      ? _activityTypeController.text
+                                      : null,
                               decoration: const InputDecoration(
                                 labelText: 'Activity Type',
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.sports),
                               ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter an activity type';
+                              items: activityTypes.map((String type) {
+                                return DropdownMenuItem<String>(
+                                  value: type,
+                                  child: Text(type),
+                                );
+                              }).toList(),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Please select activity type'
+                                      : null,
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _activityTypeController.text = newValue;
+                                  });
                                 }
-                                return null;
                               },
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Schedule',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                             const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _scheduleController,
+                            DropdownButtonFormField<String>(
+                              value: _scheduleController.text.isEmpty
+                                  ? null
+                                  : scheduleOptions
+                                          .contains(_scheduleController.text)
+                                      ? _scheduleController.text
+                                      : null,
                               decoration: const InputDecoration(
                                 labelText: 'Schedule',
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.schedule),
                               ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a schedule';
+                              items: scheduleOptions.map((String schedule) {
+                                return DropdownMenuItem<String>(
+                                  value: schedule,
+                                  child: Text(schedule),
+                                );
+                              }).toList(),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Please select schedule'
+                                      : null,
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _scheduleController.text = newValue;
+                                  });
                                 }
-                                return null;
                               },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Description',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'models/chat_message.dart';
 import 'services/chat_service.dart';
 import 'widgets/message_bubble.dart';
@@ -37,6 +37,7 @@ class _GroupChatState extends State<GroupChat> {
   Timer? _messageTimer;
   int? _roomId;
   String? _error;
+  String? _chatRoomName;
 
   static const Duration _messageUpdateInterval = Duration(seconds: 3);
 
@@ -58,18 +59,17 @@ class _GroupChatState extends State<GroupChat> {
   Future<void> _initializeChat() async {
     try {
       _currentUsername = await _chatService.getCurrentUsername();
-      final roomId = await _chatService.initializeGroupChat(widget.groupName);
+      final chatInfo = await _chatService.initializeGroupChat(widget.groupId);
 
-      if (roomId != null) {
-        setState(() {
-          _roomId = roomId;
-          _isLoading = false;
-        });
-        await _loadMessages();
-        _setupMessageUpdates();
-      } else {
-        throw Exception('Failed to get room ID');
-      }
+      setState(() {
+        _roomId = chatInfo['room_id'];
+        _chatRoomName = chatInfo['group_name'];
+        _isLoading = false;
+        _error = null;
+      });
+
+      await _loadMessages();
+      _setupMessageUpdates();
     } catch (e) {
       _handleError('Error initializing chat', e);
     }
@@ -91,7 +91,10 @@ class _GroupChatState extends State<GroupChat> {
 
       final messages = await _chatService.loadMessages(_roomId!);
       if (mounted) {
-        setState(() => _messages = messages);
+        setState(() {
+          _messages = messages;
+          _error = null;
+        });
         _scrollToBottom();
       }
     } catch (e) {
@@ -100,14 +103,15 @@ class _GroupChatState extends State<GroupChat> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.isEmpty || _roomId == null) return;
+    final message = _messageController.text.trim();
+    if (message.isEmpty || _roomId == null) return;
 
     try {
-      await _chatService.sendMessage(_roomId!, _messageController.text);
+      await _chatService.sendMessage(_roomId!, message);
       _messageController.clear();
       await _loadMessages();
     } catch (e) {
-      _showErrorSnackBar('Failed to send message: $e');
+      _showErrorSnackBar(e.toString());
     }
   }
 
@@ -117,7 +121,7 @@ class _GroupChatState extends State<GroupChat> {
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _error = error.toString();
+        _error = error.toString().replaceAll('Exception: ', '');
       });
     }
   }
@@ -126,8 +130,9 @@ class _GroupChatState extends State<GroupChat> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Text(message.replaceAll('Exception: ', '')),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -156,7 +161,17 @@ class _GroupChatState extends State<GroupChat> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Error: $_error'),
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _initializeChat,
               child: const Text('Retry'),
@@ -170,6 +185,19 @@ class _GroupChatState extends State<GroupChat> {
       color: const Color(0xFFECE5DD),
       child: Column(
         children: [
+          if (_chatRoomName != null)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              color: Colors.white,
+              child: Text(
+                _chatRoomName!,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           Expanded(
             child: _messages.isEmpty
                 ? const EmptyState()

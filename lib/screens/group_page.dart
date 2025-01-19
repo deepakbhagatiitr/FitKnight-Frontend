@@ -38,7 +38,7 @@ class _GroupPageState extends State<GroupPage> {
 
       print('\n=== Loading Groups ===');
       final response = await http.get(
-        Uri.parse('http://10.81.1.209:8000/api/groups/'),
+        Uri.parse('http://10.81.88.76:8000/api/groups/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ class _GroupPageState extends State<GroupPage> {
           _groups = data.map((group) {
             String imageUrl = group['group_image'] ?? '';
             if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-              imageUrl = 'http://10.81.1.209:8000$imageUrl';
+              imageUrl = 'http://10.81.88.76:8000$imageUrl';
             }
 
             return {
@@ -118,24 +118,6 @@ class _GroupPageState extends State<GroupPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fitness Groups'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateGroupPage(),
-                ),
-              );
-
-              // If group was created successfully, refresh the groups list
-              if (result == true) {
-                await _loadGroups();
-              }
-            },
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadGroups,

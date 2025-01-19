@@ -25,14 +25,32 @@ class EditGroupPage extends StatefulWidget {
 class _EditGroupPageState extends State<EditGroupPage> {
   final _formKey = GlobalKey<FormState>();
   final _groupService = GroupManagementService();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _activityTypeController;
-  
+
   bool _isLoading = false;
   Map<String, String> _schedule = {};
-  
+
+  static const List<String> activityTypes = [
+    'Boxing',
+    'Judo',
+    'Kickboxing',
+    'Muay Thai',
+    'Sambo',
+    'Karate',
+    'Taekwondo',
+    'Kung Fu',
+    'Aikido',
+  ];
+
+  static const List<String> scheduleOptions = [
+    'Morning',
+    'Afternoon',
+    'Evening',
+  ];
+
   final List<String> _weekDays = [
     'monday',
     'tuesday',
@@ -47,8 +65,10 @@ class _EditGroupPageState extends State<EditGroupPage> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
-    _descriptionController = TextEditingController(text: widget.currentDescription);
-    _activityTypeController = TextEditingController(text: widget.currentActivityType);
+    _descriptionController =
+        TextEditingController(text: widget.currentDescription);
+    _activityTypeController =
+        TextEditingController(text: widget.currentActivityType);
     _schedule = Map.from(widget.currentSchedule);
   }
 
@@ -175,18 +195,61 @@ class _EditGroupPageState extends State<EditGroupPage> {
               },
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _activityTypeController,
+            DropdownButtonFormField<String>(
+              value: _activityTypeController.text.isEmpty
+                  ? null
+                  : activityTypes.contains(_activityTypeController.text)
+                      ? _activityTypeController.text
+                      : null,
               decoration: const InputDecoration(
                 labelText: 'Activity Type',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.sports),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter an activity type';
+              items: activityTypes.map((String type) {
+                return DropdownMenuItem<String>(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              validator: (value) => value == null || value.isEmpty
+                  ? 'Please select activity type'
+                  : null,
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _activityTypeController.text = newValue;
+                  });
                 }
-                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _schedule['default']?.isEmpty ?? true
+                  ? null
+                  : scheduleOptions.contains(_schedule['default'])
+                      ? _schedule['default']
+                      : null,
+              decoration: const InputDecoration(
+                labelText: 'Schedule',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.schedule),
+              ),
+              items: scheduleOptions.map((String schedule) {
+                return DropdownMenuItem<String>(
+                  value: schedule,
+                  child: Text(schedule),
+                );
+              }).toList(),
+              validator: (value) => value == null || value.isEmpty
+                  ? 'Please select schedule'
+                  : null,
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _schedule['default'] = newValue;
+                  });
+                }
               },
             ),
           ],

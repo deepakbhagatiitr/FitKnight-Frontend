@@ -145,7 +145,7 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const DashboardAppBar(title: 'Find Workout Buddies'),
+      appBar: const DashboardAppBar(title: 'Workout Buddies'),
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: _isLoading

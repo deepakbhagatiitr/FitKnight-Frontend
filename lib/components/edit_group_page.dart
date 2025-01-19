@@ -43,6 +43,24 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   bool _isLoading = false;
 
+  static const List<String> activityTypes = [
+    'Boxing',
+    'Judo',
+    'Kickboxing',
+    'Muay Thai',
+    'Sambo',
+    'Karate',
+    'Taekwondo',
+    'Kung Fu',
+    'Aikido',
+  ];
+
+  static const List<String> scheduleOptions = [
+    'Morning',
+    'Afternoon',
+    'Evening',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -65,7 +83,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-
       final token = prefs.getString('token');
 
       final Map<String, dynamic> requestBody = {
@@ -78,7 +95,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
       print('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.put(
-        Uri.parse('http://10.81.1.209:8000/api/groups/${widget.groupId}/'),
+        Uri.parse('http://10.81.88.76:8000/api/groups/${widget.groupId}/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -87,11 +104,23 @@ class _EditGroupPageState extends State<EditGroupPage> {
       );
 
       print('Response Status: ${response.statusCode}');
-
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         if (!mounted) return;
+
+        // Refresh potential members
+        final potentialMembersResponse = await http.get(
+          Uri.parse(
+              'http://10.81.88.76:8000/api/groups/${widget.groupId}/potential-members/'),
+          headers: {
+            'Authorization': 'Token $token',
+          },
+        );
+
+        if (potentialMembersResponse.statusCode == 200) {
+          print('Potential members refreshed successfully');
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -106,9 +135,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
       }
     } catch (e) {
       print('Error updating group: $e');
-
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error updating group: $e'),
@@ -185,19 +212,33 @@ class _EditGroupPageState extends State<EditGroupPage> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _activityTypeController,
+                      DropdownButtonFormField<String>(
+                        value: _activityTypeController.text.isEmpty
+                            ? null
+                            : activityTypes
+                                    .contains(_activityTypeController.text)
+                                ? _activityTypeController.text
+                                : null,
                         decoration: const InputDecoration(
                           labelText: 'Activity Type',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.sports),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an activity type';
+                        items: activityTypes.map((String type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please select activity type'
+                            : null,
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _activityTypeController.text = newValue;
+                            });
                           }
-
-                          return null;
                         },
                       ),
                     ],
@@ -219,21 +260,32 @@ class _EditGroupPageState extends State<EditGroupPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _scheduleController,
+                      DropdownButtonFormField<String>(
+                        value: _scheduleController.text.isEmpty
+                            ? null
+                            : scheduleOptions.contains(_scheduleController.text)
+                                ? _scheduleController.text
+                                : null,
                         decoration: const InputDecoration(
                           labelText: 'Schedule',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.schedule),
-                          hintText:
-                              'e.g., Monday, Wednesday, Friday 6:00 AM - 7:00 AM',
                         ),
-                        maxLines: 2,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a schedule';
+                        items: scheduleOptions.map((String schedule) {
+                          return DropdownMenuItem<String>(
+                            value: schedule,
+                            child: Text(schedule),
+                          );
+                        }).toList(),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please select schedule'
+                            : null,
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _scheduleController.text = newValue;
+                            });
                           }
-                          return null;
                         },
                       ),
                     ],

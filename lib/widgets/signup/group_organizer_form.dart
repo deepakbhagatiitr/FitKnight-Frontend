@@ -6,6 +6,24 @@ class GroupOrganizerForm extends StatelessWidget {
   final TextEditingController scheduleController;
   final TextEditingController descriptionController;
 
+  static const List<String> activityTypes = [
+    'Boxing',
+    'Judo',
+    'Kickboxing',
+    'Muay Thai',
+    'Sambo',
+    'Karate',
+    'Taekwondo',
+    'Kung Fu',
+    'Aikido',
+  ];
+
+  static const List<String> scheduleOptions = [
+    'Morning',
+    'Afternoon',
+    'Evening',
+  ];
+
   const GroupOrganizerForm({
     super.key,
     required this.groupNameController,
@@ -31,30 +49,56 @@ class GroupOrganizerForm extends StatelessWidget {
               value!.isEmpty ? 'Please enter a group name' : null,
         ),
         const SizedBox(height: 16),
-        TextFormField(
-          controller: activityTypeController,
+        DropdownButtonFormField<String>(
+          value: activityTypeController.text.isEmpty
+              ? null
+              : activityTypeController.text,
           decoration: InputDecoration(
             labelText: 'Activity Type',
-            hintText: 'Enter the type of activities',
+            hintText: 'Select activity type',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          validator: (value) =>
-              value!.isEmpty ? 'Please enter activity type' : null,
+          items: activityTypes.map((String type) {
+            return DropdownMenuItem<String>(
+              value: type,
+              child: Text(type),
+            );
+          }).toList(),
+          validator: (value) => value == null || value.isEmpty
+              ? 'Please select activity type'
+              : null,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              activityTypeController.text = newValue;
+            }
+          },
         ),
         const SizedBox(height: 16),
-        TextFormField(
-          controller: scheduleController,
+        DropdownButtonFormField<String>(
+          value:
+              scheduleController.text.isEmpty ? null : scheduleController.text,
           decoration: InputDecoration(
             labelText: 'Schedule',
-            hintText: 'Enter group schedule',
+            hintText: 'Select group schedule',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
+          items: scheduleOptions.map((String schedule) {
+            return DropdownMenuItem<String>(
+              value: schedule,
+              child: Text(schedule),
+            );
+          }).toList(),
           validator: (value) =>
-              value!.isEmpty ? 'Please enter schedule' : null,
+              value == null || value.isEmpty ? 'Please select schedule' : null,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              scheduleController.text = newValue;
+            }
+          },
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -73,4 +117,4 @@ class GroupOrganizerForm extends StatelessWidget {
       ],
     );
   }
-} 
+}

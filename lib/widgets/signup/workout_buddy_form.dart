@@ -16,6 +16,12 @@ class WorkoutBuddyForm extends StatelessWidget {
     'Boxing',
   ];
 
+  static const List<String> availabilityOptions = [
+    'Morning',
+    'Afternoon',
+    'Evening',
+  ];
+
   WorkoutBuddyForm({
     super.key,
     required this.fitnessGoalsController,
@@ -66,7 +72,8 @@ class WorkoutBuddyForm extends StatelessWidget {
             return FilterChip(
               label: Text(workout),
               selected: workoutPreferences.contains(workout),
-              onSelected: (selected) => onWorkoutPreferenceChanged(workout, selected),
+              onSelected: (selected) =>
+                  onWorkoutPreferenceChanged(workout, selected),
             );
           }).toList(),
         ),
@@ -82,19 +89,33 @@ class WorkoutBuddyForm extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 16),
-        TextFormField(
-          controller: availabilityController,
+        DropdownButtonFormField<String>(
+          value: availabilityController.text.isEmpty
+              ? null
+              : availabilityController.text,
           decoration: InputDecoration(
             labelText: 'Availability',
-            hintText: 'Enter your workout availability',
+            hintText: 'Select your availability',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          validator: (value) =>
-              value!.isEmpty ? 'Please enter your availability' : null,
+          items: availabilityOptions.map((String availability) {
+            return DropdownMenuItem<String>(
+              value: availability,
+              child: Text(availability),
+            );
+          }).toList(),
+          validator: (value) => value == null || value.isEmpty
+              ? 'Please select your availability'
+              : null,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              availabilityController.text = newValue;
+            }
+          },
         ),
       ],
     );
   }
-} 
+}

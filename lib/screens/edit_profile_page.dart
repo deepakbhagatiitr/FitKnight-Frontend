@@ -29,6 +29,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late bool _showEmail;
   late bool _showPhone;
   late bool _showLocation;
+  final List<String> _locations = [
+    'Delhi',
+    'Mumbai',
+    'Noida',
+    'Punjab',
+    'Haryana',
+    'Gurugram',
+  ];
   final List<String> _workoutOptions = [
     'Gym',
     'Yoga',
@@ -95,7 +103,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final request = http.MultipartRequest(
         'PUT',
-        Uri.parse('http://10.81.1.209:8000/api/profile/$username/'),
+        Uri.parse('http://10.81.88.76:8000/api/profile/$username/'),
       );
 
       request.headers.addAll({
@@ -144,7 +152,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         String imageUrl = jsonResponse['profile_image'] ?? '';
         if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-          imageUrl = 'http://10.81.1.209:8000$imageUrl';
+          imageUrl = 'http://10.81.88.76:8000$imageUrl';
         }
 
         final updatedProfile = Profile(
@@ -170,6 +178,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
           activityType: widget.profile.activityType,
           schedule: widget.profile.schedule,
         );
+
+        // Refresh recommended workout buddies
+        if (widget.profile.role == 'workout_buddy') {
+          final recommendedBuddiesResponse = await http.get(
+            Uri.parse(
+                'http://10.81.88.76:8000/api/profile/recommended-buddies/'),
+            headers: {
+              'Authorization': 'Token $token',
+            },
+          );
+
+          if (recommendedBuddiesResponse.statusCode == 200) {
+            print('Recommended workout buddies refreshed successfully');
+          }
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -230,7 +253,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               ? NetworkImage(
                                   widget.profile.imageUrl.startsWith('http')
                                       ? widget.profile.imageUrl
-                                      : 'http://10.81.1.209:8000${widget.profile.imageUrl}',
+                                      : 'http://10.81.88.76:8000${widget.profile.imageUrl}',
                                 )
                               : null) as ImageProvider?,
                       child: _newProfileImage == null &&
@@ -263,13 +286,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
               if (widget.profile.role != 'group_organizer') ...[
                 TextFormField(
                   controller: _bioController,
-                  maxLines: 3,
                   decoration: const InputDecoration(
                     labelText: 'Bio',
                     icon: Icon(Icons.description),
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
               TextFormField(
                 controller: _emailController,
@@ -287,16 +308,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 decoration: const InputDecoration(
                   labelText: 'Phone',
                   icon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
+              DropdownButtonFormField<String>(
+                value: _locationController.text.isEmpty
+                    ? null
+                    : _locations.contains(_locationController.text)
+                        ? _locationController.text
+                        : null,
                 decoration: const InputDecoration(
                   labelText: 'Location',
                   icon: Icon(Icons.location_on),
+                  border: OutlineInputBorder(),
                 ),
+                items: _locations.map((String location) {
+                  return DropdownMenuItem<String>(
+                    value: location,
+                    child: Text(location),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _locationController.text = newValue;
+                    });
+                  }
+                },
+                validator: (value) =>
+                    value == null ? 'Please select a location' : null,
               ),
               if (widget.profile.role != 'group_organizer') ...[
                 const SizedBox(height: 24),

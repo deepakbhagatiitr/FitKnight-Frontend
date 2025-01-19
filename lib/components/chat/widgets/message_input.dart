@@ -76,4 +76,4 @@ class MessageInput extends StatelessWidget {
       ),
     );
   }
-} 
+}

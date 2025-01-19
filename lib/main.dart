@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/login_page.dart';
+import 'screens/splash_screen.dart';
 import 'package:fitknight/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import 'providers/notification_provider.dart';
@@ -24,15 +24,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Login App',
+      title: 'FitKnight',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const SplashScreen(),
     );
   }
 }
-
-

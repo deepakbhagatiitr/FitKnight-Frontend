@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return NetworkImage(imageUrl);
     } else if (imageUrl.isNotEmpty) {
-      return NetworkImage('http://10.81.1.209:8000$imageUrl');
+      return NetworkImage('http://10.81.88.76:8000$imageUrl');
     } else {
       return const NetworkImage('https://picsum.photos/200');
     }
@@ -164,9 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
       await prefs.setBool(
           'showLocation', result.privacySettings['showLocation'] ?? true);
 
-      setState(() {
-        _profile = result;
-      });
+      await _loadUserInfo();
     }
   }
 

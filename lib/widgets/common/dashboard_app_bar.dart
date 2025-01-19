@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../services/navigation_service.dart';
-import '../../providers/notification_provider.dart';
-import '../../screens/notifications_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../screens/profile_page.dart';
+import '../../screens/login_page.dart';
 
 class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -15,44 +14,39 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(title),
-      actions: [
-        Consumer<NotificationProvider>(
-          builder: (context, notificationProvider, child) {
-            final unreadCount = notificationProvider.unreadCount;
-            return Badge(
-              label: unreadCount > 0 ? Text(unreadCount.toString()) : null,
-              child: IconButton(
-                icon: const Icon(Icons.notifications),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const NotificationsPage()),
-                  ).then((_) {
-                    // Refresh notifications after returning from notifications page
-                    notificationProvider.fetchNotifications();
-                  });
-                },
-              ),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.person),
-          onPressed: () => NavigationService.navigateToProfile(context),
-        ),
-        IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: () => NavigationService.handleLogout(context),
-        ),
-        if (additionalActions != null) ...additionalActions!,
-      ],
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(title),
+      actions: [
+        if (additionalActions != null) ...additionalActions!,
+        IconButton(
+          icon: const Icon(Icons.person),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfilePage()),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () => _handleLogout(context),
+        ),
+      ],
+    );
+  }
 }

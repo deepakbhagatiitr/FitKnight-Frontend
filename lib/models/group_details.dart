@@ -89,15 +89,9 @@ class GroupDetails {
           title: 'Evening Workout',
           description: '45 minutes strength training',
           type: 'daily',
-          isCompleted: true,
-        ),
-        Goal(
-          id: '3',
-          title: 'Stretching',
-          description: '15 minutes flexibility exercises',
-          type: 'daily',
           isCompleted: false,
         ),
+
         // Weekly Goals
         Goal(
           id: '4',
@@ -110,13 +104,6 @@ class GroupDetails {
           id: '5',
           title: 'Group Sessions',
           description: 'Attend 3 group workouts',
-          type: 'weekly',
-          isCompleted: false,
-        ),
-        Goal(
-          id: '6',
-          title: 'Weight Training',
-          description: 'Complete 4 strength sessions',
           type: 'weekly',
           isCompleted: false,
         ),
@@ -179,7 +166,7 @@ class GroupMember {
       Map<String, dynamic> json, String organizerUsername) {
     String imageUrl = json['profile_image'] ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.1.209:8000$imageUrl';
+      imageUrl = 'http://10.81.88.76:8000$imageUrl';
     }
 
     return GroupMember(
@@ -220,7 +207,7 @@ class JoinRequest {
   factory JoinRequest.fromJson(Map<String, dynamic> json) {
     String imageUrl = json['user']['profile_image'] ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.1.209:8000$imageUrl';
+      imageUrl = 'http://10.81.88.76:8000$imageUrl';
     }
 
     return JoinRequest(

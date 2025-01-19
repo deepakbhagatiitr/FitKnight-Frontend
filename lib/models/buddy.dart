@@ -31,7 +31,7 @@ class Buddy {
   factory Buddy.fromJson(Map<String, dynamic> json) {
     String imageUrl = json['profile_image'] ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.1.209:8000$imageUrl';
+      imageUrl = 'http://10.81.88.76:8000$imageUrl';
     }
 
     List<String> parseWorkoutPreferences(dynamic preferences) {

@@ -10,4 +10,4 @@ class TimeFormatter {
     }
     return '${dateTime.day}/${dateTime.month} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
-} 
+}

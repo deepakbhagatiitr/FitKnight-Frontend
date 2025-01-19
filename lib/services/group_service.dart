@@ -6,7 +6,7 @@ import '../models/group.dart';
 import '../models/member.dart';
 
 class GroupService {
-  static const String _baseUrl = 'http://10.81.1.209:8000/api';
+  static const String _baseUrl = 'http://10.81.88.76:8000/api';
 
   Future<String> _getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
