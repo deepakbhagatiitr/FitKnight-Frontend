@@ -7,6 +7,7 @@ class Group {
   final String organizer;
   final int memberCount;
   final String activity;
+  final String schedule;
 
   Group({
     required this.id,
@@ -17,6 +18,7 @@ class Group {
     required this.organizer,
     required this.memberCount,
     required this.activity,
+    required this.schedule,
   });
 
   factory Group.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Group {
       organizer: json['organizer'] ?? '',
       memberCount: json['member_count'] ?? 0,
       activity: json['activity'] ?? '',
+      schedule: json['schedule'] ?? '',
     );
   }
 
@@ -42,6 +45,7 @@ class Group {
       'organizer': organizer,
       'member_count': memberCount,
       'activity': activity,
+      'schedule': schedule,
     };
   }
 }

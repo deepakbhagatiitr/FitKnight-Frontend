@@ -28,7 +28,7 @@ class Member {
   factory Member.fromJson(Map<String, dynamic> json) {
     String imageUrl = json['profile_image'] ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.88.76:8000$imageUrl';
+      imageUrl = 'http://10.81.93.48:8000$imageUrl';
     }
 
     return Member(

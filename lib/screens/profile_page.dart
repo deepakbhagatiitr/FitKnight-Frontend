@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return NetworkImage(imageUrl);
     } else if (imageUrl.isNotEmpty) {
-      return NetworkImage('http://10.81.88.76:8000$imageUrl');
+      return NetworkImage('http://10.81.93.48:8000$imageUrl');
     } else {
       return const NetworkImage('https://picsum.photos/200');
     }
@@ -173,16 +173,32 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         Card(
           margin: const EdgeInsets.all(16),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Fitness Milestones',
-                  style: Theme.of(context).textTheme.titleLarge,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.fitness_center,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Fitness Milestones',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -190,16 +206,19 @@ class _ProfilePageState extends State<ProfilePage> {
                       icon: Icons.emoji_events,
                       title: '10+',
                       subtitle: 'Workouts\nCompleted',
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     ProfileMilestoneCard(
                       icon: Icons.access_time,
                       title: '20+',
                       subtitle: 'Hours\nTrained',
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                     ProfileMilestoneCard(
                       icon: Icons.trending_up,
                       title: '5',
                       subtitle: 'Goals\nAchieved',
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                   ],
                 ),

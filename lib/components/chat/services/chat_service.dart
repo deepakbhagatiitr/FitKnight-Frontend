@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 
 class ChatService {
-  static const String _baseUrl = 'http://10.81.88.76:8000/api';
+  static const String _baseUrl = 'http://10.81.93.48:8000/api';
   int? _currentRoomId;
 
   Future<String?> _getAuthToken() async {

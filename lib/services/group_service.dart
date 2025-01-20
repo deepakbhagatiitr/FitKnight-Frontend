@@ -6,7 +6,7 @@ import '../models/group.dart';
 import '../models/member.dart';
 
 class GroupService {
-  static const String _baseUrl = 'http://10.81.88.76:8000/api';
+  static const String _baseUrl = 'http://10.81.93.48:8000/api';
 
   Future<String> _getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -54,8 +54,31 @@ class GroupService {
   Future<List<Member>> loadPotentialMembers() async {
     final token = await _getAuthToken();
 
+    // Get the managed groups to get their schedules and locations
+    final managedGroups = await loadManagedGroups();
+    final schedules = managedGroups
+        .map((group) => group.schedule)
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .join(',');
+    final locations = managedGroups
+        .map((group) => group.location)
+        .where((l) => l.isNotEmpty)
+        .toSet()
+        .join(',');
+
+    final queryParams = {
+      'role': 'workout_buddy',
+      'match_type': 'any', // Match either schedule or location
+      if (schedules.isNotEmpty) 'schedules': schedules,
+      if (locations.isNotEmpty) 'locations': locations,
+    };
+
+    final uri =
+        Uri.parse('$_baseUrl/profile/').replace(queryParameters: queryParams);
+
     final response = await http.get(
-      Uri.parse('$_baseUrl/profile/?role=workout_buddy&page_size=3'),
+      uri,
       headers: {
         'Authorization': 'Token $token',
         'Content-Type': 'application/json',

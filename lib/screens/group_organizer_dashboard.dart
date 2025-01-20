@@ -96,7 +96,7 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
       },
       child: Scaffold(
         appBar: DashboardAppBar(
-          title: 'Group Organizer Dashboard',
+          title: 'Group Organizer',
           additionalActions: [
             IconButton(
               icon: const Icon(Icons.add),

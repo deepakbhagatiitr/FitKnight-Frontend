@@ -16,7 +16,7 @@ class UserNotFoundException implements Exception {
 }
 
 class AuthService {
-  static const String baseUrl = 'http://10.81.88.76:8000/api';
+  static const String baseUrl = 'http://10.81.93.48:8000/api';
   static final AuthService _instance = AuthService._internal();
 
   factory AuthService() {
@@ -32,8 +32,8 @@ class AuthService {
         Uri.parse('$baseUrl/login/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'username': username,
-          'password': password,
+          'username': username.trim(),
+          'password': password.trim(),
         }),
       );
 

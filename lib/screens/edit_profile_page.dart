@@ -103,7 +103,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final request = http.MultipartRequest(
         'PUT',
-        Uri.parse('http://10.81.88.76:8000/api/profile/$username/'),
+        Uri.parse('http://10.81.93.48:8000/api/profile/$username/'),
       );
 
       request.headers.addAll({
@@ -152,7 +152,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         String imageUrl = jsonResponse['profile_image'] ?? '';
         if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-          imageUrl = 'http://10.81.88.76:8000$imageUrl';
+          imageUrl = 'http://10.81.93.48:8000$imageUrl';
         }
 
         final updatedProfile = Profile(
@@ -183,7 +183,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (widget.profile.role == 'workout_buddy') {
           final recommendedBuddiesResponse = await http.get(
             Uri.parse(
-                'http://10.81.88.76:8000/api/profile/recommended-buddies/'),
+                'http://10.81.93.48:8000/api/profile/recommended-buddies/'),
             headers: {
               'Authorization': 'Token $token',
             },
@@ -253,7 +253,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               ? NetworkImage(
                                   widget.profile.imageUrl.startsWith('http')
                                       ? widget.profile.imageUrl
-                                      : 'http://10.81.88.76:8000${widget.profile.imageUrl}',
+                                      : 'http://10.81.93.48:8000${widget.profile.imageUrl}',
                                 )
                               : null) as ImageProvider?,
                       child: _newProfileImage == null &&

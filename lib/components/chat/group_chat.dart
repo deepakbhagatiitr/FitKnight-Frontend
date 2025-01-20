@@ -185,33 +185,22 @@ class _GroupChatState extends State<GroupChat> {
       color: const Color(0xFFECE5DD),
       child: Column(
         children: [
-          if (_chatRoomName != null)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              color: Colors.white,
-              child: Text(
-                _chatRoomName!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
           Expanded(
             child: _messages.isEmpty
                 ? const EmptyState()
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(
+                      top: 16,
+                      right: 16,
+                      bottom: 16,
+                    ),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages[index];
                       final isCurrentUser =
                           message.sender['username'] == _currentUsername;
-                      final showSenderInfo = index == 0 ||
-                          _messages[index - 1].sender['username'] !=
-                              message.sender['username'];
+                      const showSenderInfo = false;
 
                       return MessageBubble(
                         message: message,

@@ -144,34 +144,37 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const DashboardAppBar(title: 'Workout Buddies'),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _buildDashboardContent(),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Buddies',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.groups),
-            label: 'Groups',
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const GroupPage()),
-            );
-          }
-        },
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: const DashboardAppBar(title: 'Workout Buddies'),
+        body: RefreshIndicator(
+          onRefresh: _loadData,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildDashboardContent(),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: 'Buddies',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.groups),
+              label: 'Groups',
+            ),
+          ],
+          onTap: (index) {
+            if (index == 1) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const GroupPage()),
+              );
+            }
+          },
+        ),
       ),
     );
   }

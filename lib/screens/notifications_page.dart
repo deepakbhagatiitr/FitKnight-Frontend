@@ -32,7 +32,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       final token = prefs.getString('token');
 
       final response = await http.get(
-        Uri.parse('http://10.81.88.76:8000/api/notifications/'),
+        Uri.parse('http://10.81.93.48:8000/api/notifications/'),
         headers: {
           'Authorization': 'Token $token',
         },
@@ -62,7 +62,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
       final response = await http.post(
         Uri.parse(
-            'http://10.81.88.76:8000/api/notifications/$notificationId/mark_read/'),
+            'http://10.81.93.48:8000/api/notifications/$notificationId/mark_read/'),
         headers: {
           'Authorization': 'Token $token',
         },
@@ -90,7 +90,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       final token = prefs.getString('token');
 
       final response = await http.post(
-        Uri.parse('http://10.81.88.76:8000/api/notifications/mark_all_read/'),
+        Uri.parse('http://10.81.93.48:8000/api/notifications/mark_all_read/'),
         headers: {
           'Authorization': 'Token $token',
         },

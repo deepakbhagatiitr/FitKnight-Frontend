@@ -138,123 +138,154 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Sign Up')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Profile Image Picker
-                ProfileImagePicker(
-                  profileImage: _profileImage,
-                  onImagePicked: (File image) {
-                    setState(() => _profileImage = image);
-                  },
-                ),
-                const SizedBox(height: 16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 600;
+            final horizontalPadding = isSmallScreen ? 24.0 : 48.0;
+            final maxContentWidth = 600.0;
 
-                // Basic Information Form
-                BasicInfoForm(
-                  usernameController: _usernameController,
-                  emailController: _emailController,
-                  passwordController: _passwordController,
-                  confirmPasswordController: _confirmPasswordController,
-                  phoneController: _phoneController,
-                  locationController: _locationController,
-                  isPasswordVisible: _isPasswordVisible,
-                  isConfirmPasswordVisible: _isConfirmPasswordVisible,
-                  onPasswordVisibilityChanged: (value) {
-                    setState(() => _isPasswordVisible = value);
-                  },
-                  onConfirmPasswordVisibilityChanged: (value) {
-                    setState(() => _isConfirmPasswordVisible = value);
-                  },
+            return Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 24.0,
                 ),
-                const SizedBox(height: 16),
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Profile Image Picker
+                        ProfileImagePicker(
+                          profileImage: _profileImage,
+                          onImagePicked: (File image) {
+                            setState(() => _profileImage = image);
+                          },
+                        ),
+                        const SizedBox(height: 16),
 
-                // Role Selection
-                const Text(
-                  'Select Your Role',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<UserRole>(
-                        title: const Text('Workout Buddy'),
-                        value: UserRole.workoutBuddy,
-                        groupValue: _selectedRole,
-                        onChanged: (UserRole? value) {
-                          setState(() => _selectedRole = value);
-                        },
-                      ),
+                        // Basic Information Form
+                        BasicInfoForm(
+                          usernameController: _usernameController,
+                          emailController: _emailController,
+                          passwordController: _passwordController,
+                          confirmPasswordController: _confirmPasswordController,
+                          phoneController: _phoneController,
+                          locationController: _locationController,
+                          isPasswordVisible: _isPasswordVisible,
+                          isConfirmPasswordVisible: _isConfirmPasswordVisible,
+                          onPasswordVisibilityChanged: (value) {
+                            setState(() => _isPasswordVisible = value);
+                          },
+                          onConfirmPasswordVisibilityChanged: (value) {
+                            setState(() => _isConfirmPasswordVisible = value);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Role Selection
+                        const Text(
+                          'Select Your Role',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: isSmallScreen
+                                  ? double.infinity
+                                  : constraints.maxWidth * 0.4,
+                              child: RadioListTile<UserRole>(
+                                title: Text(
+                                  'Workout Buddy',
+                                  style: TextStyle(
+                                      fontSize:
+                                          16.0), // Adjust the font size here
+                                ),
+                                value: UserRole.workoutBuddy,
+                                groupValue: _selectedRole,
+                                onChanged: (UserRole? value) {
+                                  setState(() => _selectedRole = value);
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              width: isSmallScreen
+                                  ? double.infinity
+                                  : constraints.maxWidth * 0.4,
+                              child: RadioListTile<UserRole>(
+                                title: const Text('Group Organizer'),
+                                value: UserRole.groupOrganizer,
+                                groupValue: _selectedRole,
+                                onChanged: (UserRole? value) {
+                                  setState(() => _selectedRole = value);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Role-specific forms
+                        if (_selectedRole == UserRole.workoutBuddy)
+                          WorkoutBuddyForm(
+                            fitnessGoalsController: _fitnessGoalsController,
+                            availabilityController: _availabilityController,
+                            workoutPreferences: _workoutPreferences,
+                            onWorkoutPreferenceChanged:
+                                _handleWorkoutPreferenceChanged,
+                          )
+                        else if (_selectedRole == UserRole.groupOrganizer)
+                          GroupOrganizerForm(
+                            groupNameController: _groupNameController,
+                            activityTypeController: _activityTypeController,
+                            scheduleController: _scheduleController,
+                            descriptionController: _descriptionController,
+                          ),
+
+                        const SizedBox(height: 24),
+
+                        // Sign Up Button
+                        FilledButton(
+                          onPressed: _handleSignUp,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Sign Up',
+                              style: TextStyle(fontSize: 16)),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Login Link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Already have an account? ',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: RadioListTile<UserRole>(
-                        title: const Text('Group Organizer'),
-                        value: UserRole.groupOrganizer,
-                        groupValue: _selectedRole,
-                        onChanged: (UserRole? value) {
-                          setState(() => _selectedRole = value);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Role-specific forms
-                if (_selectedRole == UserRole.workoutBuddy)
-                  WorkoutBuddyForm(
-                    fitnessGoalsController: _fitnessGoalsController,
-                    availabilityController: _availabilityController,
-                    workoutPreferences: _workoutPreferences,
-                    onWorkoutPreferenceChanged: _handleWorkoutPreferenceChanged,
-                  )
-                else if (_selectedRole == UserRole.groupOrganizer)
-                  GroupOrganizerForm(
-                    groupNameController: _groupNameController,
-                    activityTypeController: _activityTypeController,
-                    scheduleController: _scheduleController,
-                    descriptionController: _descriptionController,
                   ),
-
-                const SizedBox(height: 24),
-
-                // Sign Up Button
-                FilledButton(
-                  onPressed: _handleSignUp,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Sign Up', style: TextStyle(fontSize: 16)),
                 ),
-
-                const SizedBox(height: 16),
-
-                // Login Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Already have an account? ',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

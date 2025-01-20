@@ -20,7 +20,7 @@ class ChatMessage {
     if (imageUrl != null &&
         imageUrl.isNotEmpty &&
         !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.88.76:8000$imageUrl';
+      imageUrl = 'http://10.81.93.48:8000$imageUrl';
     }
 
     return ChatMessage(

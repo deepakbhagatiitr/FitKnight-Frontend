@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
-  static const String baseUrl = 'http://10.81.88.76:8000/api';
+  static const String baseUrl = 'http://10.81.93.48:8000/api';
   static WebSocketChannel? _channel;
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -189,7 +189,7 @@ class NotificationService {
       }
 
       final wsUrl = Uri.parse(
-          'ws://10.81.88.76:8000/ws/notifications/?token=$token&user_id=$userId');
+          'ws://10.81.93.48:8000/ws/notifications/?token=$token&user_id=$userId');
       print('Connecting to WebSocket: $wsUrl');
 
       _channel = WebSocketChannel.connect(wsUrl);

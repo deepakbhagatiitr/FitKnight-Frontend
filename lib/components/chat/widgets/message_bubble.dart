@@ -56,7 +56,7 @@ class MessageBubble extends StatelessWidget {
   Widget _buildMessageContent() {
     return Container(
       margin: EdgeInsets.only(
-        left: !isCurrentUser && !showSenderInfo ? 40 : 0,
+        left: !isCurrentUser && !showSenderInfo ? 8 : 0,
       ),
       child: Row(
         mainAxisAlignment:

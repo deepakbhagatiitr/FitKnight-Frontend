@@ -24,15 +24,7 @@ class ContactInfoCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildContactList(),
-            if (profile.role == 'group_organizer') ...[
-              const Divider(height: 32),
-              Text(
-                'Group Information',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              _buildGroupInfo(),
-            ],
+            
           ],
         ),
       ),
@@ -92,23 +84,7 @@ class ContactInfoCard extends StatelessWidget {
 
     return Column(
       children: [
-        ListTile(
-          leading: const Icon(Icons.group),
-          title: const Text('Group Name'),
-          subtitle: Text(profile.groupName),
-        ),
-        if (profile.activityType.isNotEmpty)
-          ListTile(
-            leading: const Icon(Icons.fitness_center),
-            title: const Text('Activity Type'),
-            subtitle: Text(profile.activityType),
-          ),
-        if (profile.schedule.isNotEmpty)
-          ListTile(
-            leading: const Icon(Icons.schedule),
-            title: const Text('Schedule'),
-            subtitle: Text(profile.schedule),
-          ),
+       
       ],
     );
   }
