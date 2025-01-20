@@ -26,8 +26,6 @@ class GroupManagementService {
       body: jsonEncode(requestBody),
     );
 
- 
-
     if (groupResponse.statusCode != 200) {
       throw Exception('Failed to update group: ${groupResponse.body}');
     }
@@ -46,8 +44,6 @@ class GroupManagementService {
         'description': requestBody['description'],
       }),
     );
-
-
 
     if (profileResponse.statusCode != 200) {
       print(

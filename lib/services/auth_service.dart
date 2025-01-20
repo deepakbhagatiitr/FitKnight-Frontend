@@ -38,7 +38,7 @@ class AuthService {
       );
 
       final data = json.decode(response.body);
-      print('Login response: $data'); 
+      print('Login response: $data');
 
       if (data['status'] == 'success') {
         final userId = data['user']?['id']?.toString() ?? '';
@@ -172,7 +172,6 @@ class AuthService {
               'location': formData.location,
             }),
           );
-
 
           if (groupResponse.statusCode != 201) {
             throw Exception('Failed to create group: ${groupResponse.body}');

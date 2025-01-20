@@ -92,7 +92,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
         'schedule': _scheduleController.text.trim(),
       };
 
-
       final response = await http.put(
         Uri.parse('http://10.81.93.48:8000/api/groups/${widget.groupId}/'),
         headers: {
@@ -101,7 +100,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
         },
         body: jsonEncode(requestBody),
       );
-
 
       if (response.statusCode == 200) {
         if (!mounted) return;

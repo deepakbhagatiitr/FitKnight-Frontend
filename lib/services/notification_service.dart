@@ -21,10 +21,8 @@ class NotificationService {
 
   static Future<void> initialize() async {
     try {
- 
       const androidInitSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
-
 
       const iosInitSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
@@ -35,19 +33,16 @@ class NotificationService {
         defaultPresentSound: false,
       );
 
-    
       const initSettings = InitializationSettings(
         android: androidInitSettings,
         iOS: iosInitSettings,
       );
-
 
       // Initialize the plugin and request permissions
       await _notifications.initialize(
         initSettings,
         onDidReceiveNotificationResponse: _handleNotificationTap,
       );
-
 
       // Request permission for Android 13 and above
       final platform = _notifications.resolvePlatformSpecificImplementation<
@@ -71,7 +66,6 @@ class NotificationService {
 
         await platform.createNotificationChannel(androidChannel);
       }
-
     } catch (e, stackTrace) {
       print('Error initializing notification service: $e');
       print('Stack trace: $stackTrace');
@@ -136,7 +130,6 @@ class NotificationService {
       final notificationId =
           DateTime.now().millisecondsSinceEpoch.remainder(100000);
 
-
       // Showing the notification
       await _notifications.show(
         notificationId,
@@ -180,7 +173,7 @@ class NotificationService {
       _channel!.stream.listen(
         (message) async {
           try {
-            _reconnectAttempts = 0; 
+            _reconnectAttempts = 0;
             print('WebSocket message received: $message');
 
             final data = json.decode(message);
@@ -199,8 +192,7 @@ class NotificationService {
                   'importance': 'max',
                 });
               }
-            }
-            else if (data['type'] == 'group_chat') {
+            } else if (data['type'] == 'group_chat') {
               print('Processing chat message notification');
               await showNotification({
                 'title': 'New Message',
@@ -210,8 +202,7 @@ class NotificationService {
                 'priority': 'high',
                 'importance': 'max',
               });
-            }
-            else if (data['type'] == 'notification') {
+            } else if (data['type'] == 'notification') {
               print('Processing notification: ${data['data']}');
               final notificationData = data['data'];
 
@@ -239,8 +230,7 @@ class NotificationService {
                   'importance': 'max',
                 });
               }
-            }
-            else if (data['type'] == 'request_response') {
+            } else if (data['type'] == 'request_response') {
               print('Processing request response notification');
               final status = data['status']?.toLowerCase();
               final message = status == 'approved'

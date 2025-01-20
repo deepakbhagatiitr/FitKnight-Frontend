@@ -85,8 +85,6 @@ class GroupService {
       },
     );
 
-
-
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final List<dynamic> profiles = data['results'] ?? [];
@@ -161,7 +159,6 @@ class GroupService {
 
       final organizerProfile = await _fetchOrganizerProfile(organizerUsername);
 
-
       data['organizer_profile'] = organizerProfile;
 
       return {
@@ -189,7 +186,7 @@ class GroupService {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success') {
           if (data['is_organizer']) {
-            return null; 
+            return null;
           }
 
           final request = data['request'];

@@ -189,8 +189,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 ),
                                 onTap: () {
                                   _markAsRead(notification['id']);
-                                  if (notification['related_link'] != null) {
-                                  }
+                                  if (notification['related_link'] != null) {}
                                 },
                               ),
                             );

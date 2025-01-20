@@ -44,7 +44,6 @@ class _GroupPageState extends State<GroupPage> {
         },
       );
 
-
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -149,7 +148,6 @@ class _GroupPageState extends State<GroupPage> {
                 },
               ),
             ),
-
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())

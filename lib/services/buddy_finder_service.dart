@@ -24,10 +24,8 @@ class BuddyFinderService {
     );
 
     if (response.statusCode == 200) {
-
       final prettyJson =
           const JsonEncoder.withIndent('  ').convert(jsonDecode(response.body));
-
 
       final jsonResponse = jsonDecode(response.body);
       final List<dynamic> data = jsonResponse['results'] ?? [];
@@ -35,7 +33,6 @@ class BuddyFinderService {
     } else if (response.statusCode == 401) {
       throw Exception('Session expired');
     } else {
-
       throw Exception('Failed to load buddies: ${response.statusCode}');
     }
   }
