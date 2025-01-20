@@ -27,7 +27,6 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
   String _selectedActivity = '';
   String _selectedLocation = '';
 
-  // Lists for filter options
   List<String> _activityTypes = [];
   List<String> _locations = [];
 
@@ -39,13 +38,11 @@ class _BuddyFinderDashboardState extends State<BuddyFinderDashboard> {
 
   void _updateFilterOptions() {
     setState(() {
-      // Get unique activity types from both buddies and groups
       _activityTypes = {
         ..._recommendedBuddies.expand((b) => b.workoutPreferences),
         ..._fitnessGroups.map((g) => g.activity).where((a) => a.isNotEmpty),
       }.toList();
 
-      // Get unique locations
       _locations = {
         ..._recommendedBuddies.map((b) => b.location),
         ..._fitnessGroups.map((g) => g.location),

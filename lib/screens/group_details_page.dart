@@ -31,10 +31,8 @@ class GroupDetailsPage extends StatefulWidget {
 
 class _GroupDetailsPageState extends State<GroupDetailsPage>
     with TickerProviderStateMixin {
-  // Controllers
   TabController? _tabController;
 
-  // State variables
   bool _isLoading = true;
   GroupDetails? _groupDetails;
   List<GroupMember> _members = [];
@@ -46,10 +44,8 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
   List<Tab> _tabs = [];
   List<Widget> _tabViews = [];
 
-  // Services
   final _groupService = GroupService();
 
-  // Lifecycle methods
   @override
   void initState() {
     super.initState();
@@ -62,7 +58,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
     super.dispose();
   }
 
-  // Data Loading Methods
   Future<void> _loadData() async {
     try {
       setState(() {
@@ -104,7 +99,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
   Future<void> _checkJoinRequestStatus() async {
     try {
       final status = await _groupService.checkJoinRequestStatus(widget.groupId);
-      print('Received join request status: $status'); // Debug print
       if (mounted) {
         setState(() {
           _joinRequestStatus = status?.toLowerCase();
@@ -170,40 +164,33 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
     }
   }
 
-  // Tab Management
   void _setupTabs() {
-    // Initialize tabs
     _tabs = [
       const Tab(text: 'Details'),
       const Tab(text: 'Members'),
     ];
 
-    // Initialize tab views
     _tabViews = [
       _buildDetailsTab(),
       _buildMembersTab(),
     ];
 
-    // Add Requests tab if user is organizer
     if (_groupDetails?.isOrganizer ?? false) {
       _tabs.add(const Tab(text: 'Requests'));
       _tabViews.add(_buildRequestsTab());
     }
 
-    // Add Chat tab if user is organizer or member
     if (_isOrganizerOrMember) {
       _tabs.add(const Tab(text: 'Chat'));
       _tabViews.add(_buildChatTab());
     }
 
-    // Initialize TabController
     _tabController?.dispose();
     _tabController = TabController(
       length: _tabs.length,
       vsync: this,
     );
 
-    // Add listener for tab changes
     _tabController!.addListener(() {
       if (_tabController!.index == 2 && (_groupDetails?.isOrganizer ?? false)) {
         _loadJoinRequests();
@@ -215,7 +202,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
     }
   }
 
-  // UI Building Methods
   Widget _buildDetailsTab() {
     if (_groupDetails == null) return const SizedBox.shrink();
 
@@ -308,7 +294,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage>
   }
 
   bool _canSendJoinRequest() {
-    // Allow join request if status is null (never requested) or rejected
     return _joinRequestStatus == null ||
         _joinRequestStatus?.toLowerCase() == 'rejected';
   }

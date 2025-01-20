@@ -63,7 +63,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _showPhone = widget.profile.privacySettings['showPhone'] ?? true;
     _showLocation = widget.profile.privacySettings['showLocation'] ?? true;
 
-    // Initialize workout preferences with proper casing to match options
     _selectedWorkoutPreferences = widget.profile.workoutPreferences
         .map((pref) => _workoutOptions.firstWhere(
               (option) => option.toLowerCase() == pref.toLowerCase(),
@@ -110,14 +109,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'Authorization': 'Token $token',
       });
 
-      // Create privacy settings map
       final privacySettings = {
         'showEmail': _showEmail,
         'showPhone': _showPhone,
         'showLocation': _showLocation,
       };
 
-      // Save privacy settings to SharedPreferences immediately
+      // Saving privacy settings to SharedPreferences immediately
       await prefs.setBool('showEmail', _showEmail);
       await prefs.setBool('showPhone', _showPhone);
       await prefs.setBool('showLocation', _showLocation);
@@ -179,7 +177,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           schedule: widget.profile.schedule,
         );
 
-        // Refresh recommended workout buddies
         if (widget.profile.role == 'workout_buddy') {
           final recommendedBuddiesResponse = await http.get(
             Uri.parse(

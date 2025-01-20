@@ -35,7 +35,6 @@ class _SignUpPageState extends State<SignUpPage> {
   final _scheduleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  // State variables
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   File? _profileImage;
@@ -166,7 +165,6 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Basic Information Form
                         BasicInfoForm(
                           usernameController: _usernameController,
                           emailController: _emailController,
@@ -185,7 +183,6 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Role Selection
                         const Text(
                           'Select Your Role',
                           style: TextStyle(
@@ -228,7 +225,6 @@ class _SignUpPageState extends State<SignUpPage> {
                           ],
                         ),
 
-                        // Role-specific forms
                         if (_selectedRole == UserRole.workoutBuddy)
                           WorkoutBuddyForm(
                             fitnessGoalsController: _fitnessGoalsController,

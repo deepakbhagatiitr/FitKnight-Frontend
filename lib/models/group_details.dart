@@ -2,7 +2,7 @@ class Goal {
   final String id;
   final String title;
   final String description;
-  final String type; // 'daily' or 'weekly'
+  final String type; 
   final bool isCompleted;
 
   Goal({
@@ -69,14 +69,11 @@ class GroupDetails {
       Map<String, dynamic> json, String currentUsername) {
     List<Goal> goals = [];
 
-    // Parse goals from API if available, otherwise use dummy data
     if (json['goals'] != null) {
       goals =
           (json['goals'] as List).map((goal) => Goal.fromJson(goal)).toList();
     } else {
-      // Create dummy goals data
       goals = [
-        // Daily Goals
         Goal(
           id: '1',
           title: 'Morning Workout',
@@ -92,7 +89,6 @@ class GroupDetails {
           isCompleted: false,
         ),
 
-        // Weekly Goals
         Goal(
           id: '4',
           title: 'Distance Target',
@@ -110,7 +106,6 @@ class GroupDetails {
       ];
     }
 
-    // Get organizer profile information from the json
     final organizerProfile = json['organizer_profile'] ?? {};
 
     return GroupDetails(

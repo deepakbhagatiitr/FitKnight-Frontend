@@ -188,7 +188,6 @@ class _GroupOrganizerDashboardState extends State<GroupOrganizerDashboard> {
             member.availability.toLowerCase().contains(query);
       }).toList();
     }
-    // Return all members if showAllMembers is true, otherwise return only three
     return _showAllMembers ? filteredMembers : filteredMembers.take(3).toList();
   }
 

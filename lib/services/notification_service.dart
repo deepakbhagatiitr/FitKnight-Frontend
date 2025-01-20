@@ -21,11 +21,11 @@ class NotificationService {
 
   static Future<void> initialize() async {
     try {
-      // Initialize Android settings with default app icon
+ 
       const androidInitSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      // Initialize iOS settings
+
       const iosInitSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
@@ -35,13 +35,12 @@ class NotificationService {
         defaultPresentSound: false,
       );
 
-      // Initialize settings for both platforms
+    
       const initSettings = InitializationSettings(
         android: androidInitSettings,
         iOS: iosInitSettings,
       );
 
-      print('Initializing notification plugin...');
 
       // Initialize the plugin and request permissions
       await _notifications.initialize(
@@ -49,7 +48,6 @@ class NotificationService {
         onDidReceiveNotificationResponse: _handleNotificationTap,
       );
 
-      print('Notification plugin initialized successfully');
 
       // Request permission for Android 13 and above
       final platform = _notifications.resolvePlatformSpecificImplementation<
@@ -71,12 +69,9 @@ class NotificationService {
           enableLights: true,
         );
 
-        print('Creating Android notification channel...');
         await platform.createNotificationChannel(androidChannel);
-        print('Android notification channel created successfully');
       }
 
-      print('Notification service initialization completed');
     } catch (e, stackTrace) {
       print('Error initializing notification service: $e');
       print('Stack trace: $stackTrace');
@@ -85,13 +80,10 @@ class NotificationService {
 
   static void _handleNotificationTap(NotificationResponse response) {
     print('Notification tapped: ${response.payload}');
-    // Handle notification tap based on payload
     if (response.payload != null) {
       try {
         final data = json.decode(response.payload!);
-        // Handle different notification types
         if (data['type'] == 'join_request') {
-          // Navigate to join requests page
           print('Should navigate to join requests page');
         }
       } catch (e) {
@@ -105,7 +97,6 @@ class NotificationService {
     try {
       print('Preparing to show notification: $notification');
 
-      // Create Android-specific details
       final androidDetails = AndroidNotificationDetails(
         CHANNEL_ID,
         CHANNEL_NAME,
@@ -129,7 +120,6 @@ class NotificationService {
         ),
       );
 
-      // Create iOS-specific details
       final iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
@@ -138,22 +128,16 @@ class NotificationService {
         interruptionLevel: InterruptionLevel.timeSensitive,
       );
 
-      // Combine platform-specific details
       final platformDetails = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
 
-      // Generate unique ID for the notification
       final notificationId =
           DateTime.now().millisecondsSinceEpoch.remainder(100000);
 
-      print('Attempting to show notification with ID: $notificationId');
-      print('Title: ${notification['title']}');
-      print('Message: ${notification['message']}');
-      print('Type: ${notification['type']}');
 
-      // Show the notification
+      // Showing the notification
       await _notifications.show(
         notificationId,
         notification['title'] ?? 'New Notification',
@@ -175,11 +159,9 @@ class NotificationService {
     _isConnecting = true;
 
     try {
-      // Close existing connection if any
       await _channel?.sink.close();
       _channel = null;
 
-      // Get user ID from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
       final username = prefs.getString('username');
@@ -198,16 +180,14 @@ class NotificationService {
       _channel!.stream.listen(
         (message) async {
           try {
-            _reconnectAttempts = 0; // Reset attempts on successful message
+            _reconnectAttempts = 0; 
             print('WebSocket message received: $message');
 
             final data = json.decode(message);
             print('Decoded WebSocket data: $data');
 
-            // Handle join request notifications
             if (data['type'] == 'join_request') {
               print('Processing join request notification');
-              // Check if the current user is the group organizer
               if (data['group_organizer'] == username) {
                 await showNotification({
                   'title': 'New Join Request',
@@ -220,7 +200,6 @@ class NotificationService {
                 });
               }
             }
-            // Handle chat message notifications
             else if (data['type'] == 'group_chat') {
               print('Processing chat message notification');
               await showNotification({
@@ -232,12 +211,10 @@ class NotificationService {
                 'importance': 'max',
               });
             }
-            // Handle notifications (including chat messages)
             else if (data['type'] == 'notification') {
               print('Processing notification: ${data['data']}');
               final notificationData = data['data'];
 
-              // Handle chat messages specifically
               if (notificationData['notification_type'] == 'group_chat') {
                 print('Processing group chat notification');
                 await showNotification({
@@ -253,7 +230,6 @@ class NotificationService {
                   'importance': 'max',
                 });
               } else {
-                // Handle other types of notifications
                 await showNotification({
                   'title': notificationData['title'] ?? 'New Notification',
                   'message': notificationData['message'] ?? '',
@@ -264,7 +240,6 @@ class NotificationService {
                 });
               }
             }
-            // Handle request response notifications
             else if (data['type'] == 'request_response') {
               print('Processing request response notification');
               final status = data['status']?.toLowerCase();
@@ -321,7 +296,6 @@ class NotificationService {
   }
 
   static int _calculateBackoffDuration(int attempt) {
-    // Exponential backoff: 2^n seconds (max 30 seconds)
     return (1 << attempt).clamp(1, 30);
   }
 

@@ -38,27 +38,24 @@ class AuthService {
       );
 
       final data = json.decode(response.body);
-      print('Login response: $data'); // Debug print
+      print('Login response: $data'); 
 
       if (data['status'] == 'success') {
-        // Extract user data
         final userId = data['user']?['id']?.toString() ?? '';
         final userData = data['user'] as Map<String, dynamic>;
         final username = userData['username'] as String;
         final userType = userData['userType'] as String;
 
-        // Get user type from userType
         final normalizedUserType =
             userType.toLowerCase() == 'buddy' ? 'buddy' : 'group';
 
-        // Save user data
+        // Saving user data
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token'] ?? '');
         await prefs.setString('userType', normalizedUserType);
         await prefs.setString('userId', userId);
         await prefs.setString('username', username);
 
-        // Save additional profile data
         if (data['profile_image'] != null) {
           await prefs.setString('profileImage', data['profile_image']);
         }
@@ -76,7 +73,6 @@ class AuthService {
           await prefs.setString('location', data['user_location']);
         }
 
-        // Initialize notifications after successful login
         Provider.of<NotificationProvider>(context, listen: false)
             .initialize(data['token'] ?? '');
 
@@ -84,7 +80,6 @@ class AuthService {
       } else {
         final message = data['message'] ?? 'Login failed';
 
-        // Check for specific error messages
         if (message.toLowerCase().contains('not registered') ||
             message.toLowerCase().contains('user is not registered')) {
           throw UserNotFoundException(
@@ -109,7 +104,6 @@ class AuthService {
       Uri.parse('$baseUrl/register/'),
     );
 
-    // Convert workout preferences to JSON string if it exists
     final Map<String, String> fields = {
       'username': formData.username,
       'email': formData.email,
@@ -122,7 +116,6 @@ class AuthService {
           : 'group_organizer',
     };
 
-    // Add role-specific fields
     if (formData.role == UserRole.workoutBuddy) {
       fields.addAll({
         'fitness_goals': formData.fitnessGoals ?? '',
@@ -130,7 +123,6 @@ class AuthService {
         'availability': formData.availability ?? '',
       });
     } else {
-      // For group organizer
       fields.addAll({
         'group_name': formData.groupName ?? '',
         'activity_type': formData.activityType ?? '',
@@ -139,10 +131,8 @@ class AuthService {
       });
     }
 
-    // Add all fields to request
     request.fields.addAll(fields);
 
-    // Add profile image if exists
     if (formData.profileImage != null) {
       request.files.add(
         await http.MultipartFile.fromPath(
@@ -155,7 +145,6 @@ class AuthService {
     try {
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
-      print('Signup response: $responseData'); // Debug print
 
       if (response.statusCode != 201) {
         final errorData = jsonDecode(responseData);
@@ -164,13 +153,11 @@ class AuthService {
             'Registration failed');
       }
 
-      // If user is a group organizer, create their group
       if (formData.role == UserRole.groupOrganizer) {
         final responseJson = jsonDecode(responseData);
         final token = responseJson['token'];
 
         if (token != null) {
-          // Create group using the token from registration
           final groupResponse = await http.post(
             Uri.parse('$baseUrl/groups/'),
             headers: {
@@ -186,7 +173,6 @@ class AuthService {
             }),
           );
 
-          print('Group creation response: ${groupResponse.body}');
 
           if (groupResponse.statusCode != 201) {
             throw Exception('Failed to create group: ${groupResponse.body}');
@@ -194,7 +180,6 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Signup error: $e'); // Debug print
       throw Exception('Registration failed: $e');
     }
   }

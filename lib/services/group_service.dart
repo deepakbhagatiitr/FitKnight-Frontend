@@ -85,8 +85,7 @@ class GroupService {
       },
     );
 
-    print('Potential members response status: ${response.statusCode}');
-    print('Potential members response body: ${response.body}');
+
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -160,10 +159,9 @@ class GroupService {
       final isMember = members.any((member) => member.username == username);
       final isOrganizer = username == organizerUsername;
 
-      // Fetch organizer profile information
       final organizerProfile = await _fetchOrganizerProfile(organizerUsername);
 
-      // Include organizer profile in the data passed to GroupDetails
+
       data['organizer_profile'] = organizerProfile;
 
       return {
@@ -191,7 +189,7 @@ class GroupService {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success') {
           if (data['is_organizer']) {
-            return null; // Organizers don't have join request status
+            return null; 
           }
 
           final request = data['request'];
@@ -278,7 +276,6 @@ class GroupService {
       throw Exception('Failed to $action request: ${response.statusCode}');
     }
 
-    // Wait for a moment to ensure the notification is processed
     await Future.delayed(const Duration(milliseconds: 500));
   }
 }

@@ -31,7 +31,6 @@ class JoinRequestsList extends StatelessWidget {
         ),
       );
 
-      // Wait for a moment to ensure the notification is processed
       await Future.delayed(const Duration(milliseconds: 500));
       onRequestHandled();
     } catch (e) {

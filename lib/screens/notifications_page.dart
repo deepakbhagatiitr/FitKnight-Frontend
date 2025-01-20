@@ -189,10 +189,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 ),
                                 onTap: () {
                                   _markAsRead(notification['id']);
-                                  // Handle navigation based on notification type
                                   if (notification['related_link'] != null) {
-                                    // Navigate to the related screen
-                                    // You'll need to implement this based on your app's routing
                                   }
                                 },
                               ),

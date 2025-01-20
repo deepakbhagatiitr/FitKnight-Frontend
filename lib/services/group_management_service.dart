@@ -26,8 +26,7 @@ class GroupManagementService {
       body: jsonEncode(requestBody),
     );
 
-    print('Group Update Response Status: ${groupResponse.statusCode}');
-    print('Group Update Response Body: ${groupResponse.body}');
+ 
 
     if (groupResponse.statusCode != 200) {
       throw Exception('Failed to update group: ${groupResponse.body}');
@@ -48,13 +47,11 @@ class GroupManagementService {
       }),
     );
 
-    print('Profile Update Response Status: ${profileResponse.statusCode}');
-    print('Profile Update Response Body: ${profileResponse.body}');
+
 
     if (profileResponse.statusCode != 200) {
       print(
           'Warning: Failed to update organizer profile: ${profileResponse.body}');
-      // Don't throw an error here as the group update was successful
     }
   }
 }

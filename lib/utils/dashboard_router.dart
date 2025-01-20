@@ -13,7 +13,6 @@ class DashboardRouter {
     } else if (userType == 'group') {
       return const GroupOrganizerDashboard();
     } else {
-      // Default to buddy dashboard or handle error
       return const BuddyFinderDashboard();
     }
   }

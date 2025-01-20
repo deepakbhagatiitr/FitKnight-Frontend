@@ -36,7 +36,6 @@ class _GroupPageState extends State<GroupPage> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      print('\n=== Loading Groups ===');
       final response = await http.get(
         Uri.parse('http://10.81.93.48:8000/api/groups/'),
         headers: {
@@ -45,8 +44,6 @@ class _GroupPageState extends State<GroupPage> {
         },
       );
 
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -123,7 +120,6 @@ class _GroupPageState extends State<GroupPage> {
         onRefresh: _loadGroups,
         child: Column(
           children: [
-            // Search Bar
             Padding(
               padding: const EdgeInsets.all(16),
               child: TextField(
@@ -154,7 +150,6 @@ class _GroupPageState extends State<GroupPage> {
               ),
             ),
 
-            // Groups List
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())

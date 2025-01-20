@@ -55,7 +55,6 @@ class ProfileService {
           }
         }
 
-        // Handle group organizer specific fields
         String groupName = '';
         String activityType = '';
         String schedule = '';
@@ -100,7 +99,6 @@ class ProfileService {
         for (var pref in preferences) {
           if (pref is String) {
             if (pref.startsWith('[')) {
-              // Parse nested JSON string
               List<dynamic> parsed = jsonDecode(pref);
               uniquePreferences.addAll(parsed.map((p) => p.toString()));
             } else {
@@ -113,7 +111,6 @@ class ProfileService {
       print('Error parsing workout preferences: $e');
     }
 
-    // Capitalize each preference
     return uniquePreferences
         .map((pref) => pref
             .toString()

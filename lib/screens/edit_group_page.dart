@@ -87,7 +87,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
         'schedule': _schedule,
       };
 
-      print('Request Body: ${requestBody}');
 
       await _groupService.updateGroup(widget.groupId, requestBody);
 

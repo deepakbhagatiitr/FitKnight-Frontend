@@ -45,7 +45,6 @@ class NotificationList extends StatelessWidget {
     final provider = Provider.of<NotificationProvider>(context, listen: false);
     provider.markAsRead(notification['id']);
 
-    // Navigate based on notification type
     switch (notification['notification_type']) {
       case 'join_request':
         Navigator.pushNamed(

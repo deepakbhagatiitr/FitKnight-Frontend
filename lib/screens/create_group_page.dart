@@ -48,13 +48,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      print('\n=== Creating Group ===');
-      print('Name: ${_nameController.text}');
-      print('Activity Type: ${_activityTypeController.text}');
-      print('Schedule: ${_scheduleController.text}');
-      print('Description: ${_descriptionController.text}');
 
-      // Simplified request body with only essential fields
+
       final Map<String, String> requestBody = {
         'name': _nameController.text.trim(),
         'activity_type': _activityTypeController.text.trim(),
@@ -62,7 +57,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         'description': _descriptionController.text.trim(),
       };
 
-      print('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('http://10.81.93.48:8000/api/groups/'),
@@ -73,8 +67,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         body: jsonEncode(requestBody),
       );
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 201) {
         if (!mounted) return;

@@ -12,7 +12,6 @@ class NavigationService {
 
   static Future<void> handleLogout(BuildContext context) async {
     try {
-      // Clear all notifications first
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       if (token != null) {
@@ -23,7 +22,6 @@ class NavigationService {
         }
       }
 
-      // Then proceed with logout
       await _authService.logout();
 
       if (!context.mounted) return;

@@ -69,7 +69,6 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
 
         if (e is UserNotFoundException) {
-          // Show sign up dialog for unregistered users
           showDialog(
             context: context,
             barrierDismissible: false, // User must choose an option
@@ -102,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       Navigator.of(context).pop();
                       _passwordController
-                          .clear(); // Clear password for security
+                          .clear(); 
                     },
                     child: const Text('Cancel'),
                   ),
@@ -122,7 +121,6 @@ class _LoginPageState extends State<LoginPage> {
             },
           );
         } else {
-          // Show error dialog for other errors
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -144,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       Navigator.of(context).pop();
                       _passwordController
-                          .clear(); // Clear password for security
+                          .clear(); 
                     },
                     child: const Text('Try Again'),
                   ),
