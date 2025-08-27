@@ -93,7 +93,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
       };
 
       final response = await http.put(
-        Uri.parse('http://10.81.93.48:8000/api/groups/${widget.groupId}/'),
+        Uri.parse(
+            'https://fitness-backend-km9x.onrender.com/api/groups/${widget.groupId}/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
         // Refresh potential members
         final potentialMembersResponse = await http.get(
           Uri.parse(
-              'http://10.81.93.48:8000/api/groups/${widget.groupId}/potential-members/'),
+              'https://fitness-backend-km9x.onrender.com/api/groups/${widget.groupId}/potential-members/'),
           headers: {
             'Authorization': 'Token $token',
           },

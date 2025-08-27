@@ -16,7 +16,7 @@ class UserNotFoundException implements Exception {
 }
 
 class AuthService {
-  static const String baseUrl = 'http://10.81.93.48:8000/api';
+  static const String baseUrl = 'https://fitness-backend-km9x.onrender.com/api';
   static final AuthService _instance = AuthService._internal();
 
   factory AuthService() {

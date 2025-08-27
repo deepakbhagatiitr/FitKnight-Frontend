@@ -20,7 +20,7 @@ class ChatMessage {
     if (imageUrl != null &&
         imageUrl.isNotEmpty &&
         !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.93.48:8000$imageUrl';
+      imageUrl = 'https://fitness-backend-km9x.onrender.com$imageUrl';
     }
 
     return ChatMessage(

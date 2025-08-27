@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return NetworkImage(imageUrl);
     } else if (imageUrl.isNotEmpty) {
-      return NetworkImage('http://10.81.93.48:8000$imageUrl');
+      return NetworkImage('https://fitness-backend-km9x.onrender.com$imageUrl');
     } else {
       return const NetworkImage('https://picsum.photos/200');
     }

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GroupManagementService {
-  static const String baseUrl = 'http://10.81.93.48:8000/api';
+  static const String baseUrl = 'https://fitness-backend-km9x.onrender.com/api';
 
   Future<void> updateGroup(
     int groupId,

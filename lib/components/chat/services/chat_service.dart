@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 
 class ChatService {
-  static const String _baseUrl = 'http://10.81.93.48:8000/api';
+  static const String _baseUrl =
+      'https://fitness-backend-km9x.onrender.com/api';
   int? _currentRoomId;
 
   Future<String?> _getAuthToken() async {

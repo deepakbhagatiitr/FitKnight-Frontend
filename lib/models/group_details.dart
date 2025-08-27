@@ -2,7 +2,7 @@ class Goal {
   final String id;
   final String title;
   final String description;
-  final String type; 
+  final String type;
   final bool isCompleted;
 
   Goal({
@@ -88,7 +88,6 @@ class GroupDetails {
           type: 'daily',
           isCompleted: false,
         ),
-
         Goal(
           id: '4',
           title: 'Distance Target',
@@ -161,7 +160,7 @@ class GroupMember {
       Map<String, dynamic> json, String organizerUsername) {
     String imageUrl = json['profile_image'] ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.93.48:8000$imageUrl';
+      imageUrl = 'https://fitness-backend-km9x.onrender.com$imageUrl';
     }
 
     return GroupMember(
@@ -202,7 +201,7 @@ class JoinRequest {
   factory JoinRequest.fromJson(Map<String, dynamic> json) {
     String imageUrl = json['user']['profile_image'] ?? '';
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = 'http://10.81.93.48:8000$imageUrl';
+      imageUrl = 'https://fitness-backend-km9x.onrender.com$imageUrl';
     }
 
     return JoinRequest(

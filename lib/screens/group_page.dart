@@ -37,7 +37,7 @@ class _GroupPageState extends State<GroupPage> {
       final token = prefs.getString('token');
 
       final response = await http.get(
-        Uri.parse('http://10.81.93.48:8000/api/groups/'),
+        Uri.parse('https://fitness-backend-km9x.onrender.com/api/groups/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ class _GroupPageState extends State<GroupPage> {
           _groups = data.map((group) {
             String imageUrl = group['group_image'] ?? '';
             if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-              imageUrl = 'http://10.81.93.48:8000$imageUrl';
+              imageUrl = 'https://fitness-backend-km9x.onrender.com$imageUrl';
             }
 
             return {

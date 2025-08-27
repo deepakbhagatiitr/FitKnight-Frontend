@@ -5,7 +5,7 @@ import '../models/buddy.dart';
 import '../models/group.dart';
 
 class BuddyFinderService {
-  static const String baseUrl = 'http://10.81.93.48:8000/api';
+  static const String baseUrl = 'https://fitness-backend-km9x.onrender.comapi';
 
   Future<List<Buddy>> loadRecommendedBuddies() async {
     final prefs = await SharedPreferences.getInstance();

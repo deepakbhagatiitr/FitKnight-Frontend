@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile.dart';
 
 class ProfileService {
-  static const String baseUrl = 'http://10.81.93.48:8000/api';
+  static const String baseUrl = 'https://fitness-backend-km9x.onrender.com/api';
 
   Future<Profile> loadUserProfile() async {
     final prefs = await SharedPreferences.getInstance();

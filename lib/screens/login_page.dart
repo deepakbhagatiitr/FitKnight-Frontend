@@ -61,9 +61,10 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
 
         final dashboard = await DashboardRouter.getAppropriateScreen();
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => dashboard),
+          (route) => false,
         );
       } catch (e) {
         if (!mounted) return;
@@ -100,8 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      _passwordController
-                          .clear(); 
+                      _passwordController.clear();
                     },
                     child: const Text('Cancel'),
                   ),
@@ -141,8 +141,7 @@ class _LoginPageState extends State<LoginPage> {
                   FilledButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      _passwordController
-                          .clear(); 
+                      _passwordController.clear();
                     },
                     child: const Text('Try Again'),
                   ),

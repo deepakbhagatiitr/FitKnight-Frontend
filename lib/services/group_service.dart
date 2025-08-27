@@ -6,7 +6,8 @@ import '../models/group.dart';
 import '../models/member.dart';
 
 class GroupService {
-  static const String _baseUrl = 'http://10.81.93.48:8000/api';
+  static const String _baseUrl =
+      'https://fitness-backend-km9x.onrender.com/api';
 
   Future<String> _getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
