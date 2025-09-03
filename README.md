@@ -1,3 +1,4 @@
+[🎥 **Click here to watch the demo**](https://drive.google.com/file/d/1oOwJCeKk5FWWG3bFXaztnMBPR4a3Hn-m/view?usp=sharing)
 # FitKnight - Fitness Community Platform
 
 ## Overview
@@ -345,3 +346,4 @@ fitknight/
 - Flutter team
 - Contributors
 - Third-party libraries
+
